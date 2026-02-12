@@ -1,0 +1,171 @@
+# Django DynamoDB Admin - Docker Compose Configuration
+
+version: '3.8'
+
+services:
+  # Main Django application
+  web:
+    build:
+      context: .
+      target: development
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=django_dynamo_admin.settings
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+      - AWS_DEFAULT_REGION=us-east-1
+      - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
+    volumes:
+      - .:/app
+      - django_media:/app/media
+      - django_static:/app/staticfiles
+    depends_on:
+      - dynamodb-local
+      - redis
+    networks:
+      - django-network
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+  # DynamoDB Local for development
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: django-dynamodb-local
+    ports:
+      - "8001:8000"
+    environment:
+      - JAVA_OPTS=-Xmx512m
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "./data"]
+    volumes:
+      - dynamodb_data:/home/dynamodblocal/data
+    networks:
+      - django-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/shell"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: django-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - django-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # DynamoDB Admin UI (optional)
+  dynamodb-admin:
+    image: aaronshaf/dynamodb-admin:latest
+    container_name: django-dynamodb-admin-ui
+    ports:
+      - "8002:8001"
+    environment:
+      - DYNAMO_ENDPOINT=http://dynamodb-local:8000
+      - AWS_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+    depends_on:
+      - dynamodb-local
+    networks:
+      - django-network
+
+  # Test runner service
+  test:
+    build:
+      context: .
+      target: development
+    environment:
+      - DJANGO_SETTINGS_MODULE=test_settings
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+      - AWS_DEFAULT_REGION=us-east-1
+      - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
+    volumes:
+      - .:/app
+    depends_on:
+      - dynamodb-local
+    networks:
+      - django-network
+    command: ["python", "tests/test_runner_complete.py", "--quick"]
+    profiles:
+      - testing
+
+  # Production-like environment
+  web-prod:
+    build:
+      context: .
+      target: production
+    ports:
+      - "8003:8000"
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=django_dynamo_admin.settings.production
+      - AWS_DEFAULT_REGION=us-east-1
+      - DYNAMODB_MAX_CONNECTIONS=20
+      - DYNAMODB_ENABLE_CACHE=true
+      - SECRET_KEY=your-production-secret-key-here
+    volumes:
+      - django_static_prod:/app/staticfiles
+      - django_media_prod:/app/media
+    depends_on:
+      - redis
+    networks:
+      - django-network
+    profiles:
+      - production
+
+# Named volumes for data persistence
+volumes:
+  dynamodb_data:
+    driver: local
+  redis_data:
+    driver: local
+  django_media:
+    driver: local
+  django_static:
+    driver: local
+  django_media_prod:
+    driver: local
+  django_static_prod:
+    driver: local
+
+# Custom network
+networks:
+  django-network:
+    driver: bridge
+
+# Override for production deployment
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+---
+# docker-compose.prod.yml
+version: '3.8'
+
+services:
+  web:
+    build:
+      target: production
+    environment:
+      - DEBUG=False
+      - DJANGO_SETTINGS_MODULE=django_dynamo_admin.settings.production
+    profiles:
+      - production
+
+  # Remove development services
+  dynamodb-local:
+    profiles:
+      - development
+  
+  dynamodb-admin:
+    profiles:
+      - development

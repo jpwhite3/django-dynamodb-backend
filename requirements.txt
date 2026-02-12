@@ -1,0 +1,28 @@
+# Core Django DynamoDB Admin Requirements
+
+# Django Framework
+Django>=6.0,<7.0
+
+# AWS SDK and DynamoDB
+boto3>=1.42.0
+botocore>=1.42.0
+pynamodb>=6.1.0
+
+# Additional utilities
+python-dateutil>=2.9.0
+pytz>=2024.2
+
+# Optional but recommended for production
+gunicorn>=23.0.0  # WSGI server for production
+whitenoise>=6.8.0  # Static file serving
+redis>=5.2.0  # For caching (optional)
+
+# Development dependencies (install with pip install -r requirements-dev.txt)
+# black>=24.0.0
+# flake8>=7.0.0
+# isort>=5.13.0
+# mypy>=1.13.0
+# pre-commit>=4.0.0
+# pytest>=8.0.0
+# pytest-django>=4.9.0
+# coverage>=7.6.0
