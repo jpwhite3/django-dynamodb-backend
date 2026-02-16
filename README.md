@@ -4,7 +4,7 @@ A Django database backend and admin integration for Amazon DynamoDB. Provides Dj
 
 [![CI](https://github.com/jpwhite3/django-dynamodb-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/jpwhite3/django-dynamodb-backend/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Django 4.2+](https://img.shields.io/badge/django-4.2+-green.svg)](https://www.djangoproject.com/)
+[![Django 5.2+](https://img.shields.io/badge/django-5.2+-green.svg)](https://www.djangoproject.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Features
@@ -18,7 +18,7 @@ A Django database backend and admin integration for Amazon DynamoDB. Provides Dj
 ## Requirements
 
 - Python 3.11+
-- Django 4.2+
+- Django 5.2+
 - boto3
 - pynamodb
 

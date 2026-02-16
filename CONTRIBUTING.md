@@ -7,7 +7,7 @@ We welcome contributions! This document provides guidelines for contributing to 
 ### Prerequisites
 
 - Python 3.11+
-- Django 4.2+
+- Django 5.2+
 - pipenv
 - Docker (for local DynamoDB)
 

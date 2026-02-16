@@ -108,7 +108,7 @@ This is the first stable release of Django DynamoDB Admin, providing complete Dj
 - **Admin Interface**: 73% faster page loads with caching
 
 #### Compatibility
-- **Django**: 4.2+ (tested up to 5.0)
+- **Django**: 5.2, 6.2 LTS
 - **Python**: 3.8+ (tested up to 3.12)
 - **DynamoDB**: All regions and configurations
 - **AWS Services**: Full IAM, CloudWatch, and S3 integration
