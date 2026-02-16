@@ -10,6 +10,7 @@ from decimal import Decimal
 from boto3.dynamodb.conditions import And, Attr, Key, Not, Or
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from django.db import models
+from django.db.models import Q
 from django.db.models.query import QuerySet
 from pynamodb.exceptions import DoesNotExist, QueryError
 
@@ -47,10 +48,20 @@ class DynamoDBQuerySet(QuerySet):
         clone._use_query_operation = self._use_query_operation
         return clone
 
-    def filter(self, **kwargs):
-        """Add filters to the queryset."""
+    def filter(self, *args, **kwargs):
+        """Add filters to the queryset.
+        
+        Accepts both Q objects as positional arguments and keyword arguments.
+        """
         clone = self._clone()
 
+        # Handle Q objects passed as positional arguments
+        for arg in args:
+            if isinstance(arg, Q):
+                # Extract filters from Q object and process them
+                clone = clone._process_q_object(arg)
+
+        # Handle keyword argument filters
         for lookup, value in kwargs.items():
             field_name, *lookup_parts = lookup.split("__")
             lookup_type = lookup_parts[0] if lookup_parts else "exact"
@@ -67,6 +78,33 @@ class DynamoDBQuerySet(QuerySet):
                 else:
                     clone._dynamodb_scan_filters.append(dynamodb_filter)
 
+        return clone
+
+    def _process_q_object(self, q_obj):
+        """Process a Q object and add its filters to the queryset."""
+        clone = self._clone()
+        
+        # Q objects have children which are tuples of (key, value) or nested Q objects
+        for child in q_obj.children:
+            if isinstance(child, Q):
+                # Recursively process nested Q objects
+                clone = clone._process_q_object(child)
+            elif isinstance(child, tuple) and len(child) == 2:
+                # It's a (lookup, value) tuple
+                lookup, value = child
+                field_name, *lookup_parts = lookup.split("__")
+                lookup_type = lookup_parts[0] if lookup_parts else "exact"
+
+                dynamodb_filter = self._convert_lookup(field_name, lookup_type, value)
+                if dynamodb_filter:
+                    if clone._can_use_query_filter(field_name, lookup_type):
+                        clone._dynamodb_query_filters.append(
+                            (field_name, lookup_type, value)
+                        )
+                        clone._use_query_operation = True
+                    else:
+                        clone._dynamodb_scan_filters.append(dynamodb_filter)
+        
         return clone
 
     def exclude(self, **kwargs):

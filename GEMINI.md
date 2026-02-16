@@ -64,3 +64,10 @@ python tests/test_runner_complete.py
 *   **Linting:** `flake8` is used for linting. You can run the linter using the `make lint` command.
 *   **Migrations:** Database migrations are managed through the `dynamodb_makemigrations` and `dynamodb_migrate` management commands.
 *   **Contributing:** Contributions are welcome. Please refer to the `CONTRIBUTING.md` file for more details.
+
+## Active Technologies
+- Python 3.11 + Django, Docker, LocalStack, black, flake8, pip-tools, pytes (001-prepare-for-oss)
+- DynamoDB (via LocalStack for local dev) (001-prepare-for-oss)
+
+## Recent Changes
+- 001-prepare-for-oss: Added Python 3.11 + Django, Docker, LocalStack, black, flake8, pip-tools, pytes

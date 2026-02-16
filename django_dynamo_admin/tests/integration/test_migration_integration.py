@@ -13,7 +13,8 @@ from django.core.management.base import CommandError
 from django.test import TestCase
 from django.utils import timezone
 from dynamodb_adapter.migration_executor import MigrationExecutor
-from dynamodb_adapter.migrations_dynamo import (CreateTable, DynamoDBMigration,
+from dynamodb_adapter.migrations_dynamo import (CreateTable, DataMigration,
+                                                DynamoDBMigration,
                                                 DynamoDBMigrationState,
                                                 UpdateTableCapacity)
 from dynamodb_adapter.models import MyModel, Question

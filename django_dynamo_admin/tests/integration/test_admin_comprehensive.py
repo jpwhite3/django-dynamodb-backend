@@ -39,7 +39,12 @@ class TestDynamoDBAdminIntegration(TestCase):
             is_superuser=True,
         )
 
-        # Create admin instances
+        # Register models with the test admin site FIRST
+        self.admin_site.register(Question, QuestionAdmin)
+        self.admin_site.register(Choice, ChoiceAdmin)
+        self.admin_site.register(MyModel, DynamoDBAdmin)
+
+        # THEN create admin instances
         self.question_admin = QuestionAdmin(Question, self.admin_site)
         self.choice_admin = ChoiceAdmin(Choice, self.admin_site)
         self.base_admin = DynamoDBAdmin(MyModel, self.admin_site)
@@ -282,7 +287,7 @@ class TestDynamoDBAdminForms(TestDynamoDBAdminIntegration):
         class TestForm(DynamoDBModelForm):
             class Meta:
                 model = Question
-                fields = ["question_text", "pub_date"]
+                fields = ["question_text"]
 
         form = TestForm()
 
@@ -297,7 +302,7 @@ class TestDynamoDBAdminForms(TestDynamoDBAdminIntegration):
         class TestForm(DynamoDBModelForm):
             class Meta:
                 model = Question
-                fields = ["question_text", "pub_date"]
+                fields = ["question_text"]
 
         # Test with valid data
         valid_data = {"question_text": "Test question", "pub_date": datetime.now()}
@@ -325,8 +330,9 @@ class TestDynamoDBAdminFilters(TestDynamoDBAdminIntegration):
         """Test boolean filter functionality."""
         request = self._create_request("/?is_active=1")
 
+        # Django 6.0+ expects params as lists (like QueryDict) due to value[-1] usage
         filter_instance = IsActiveFilter(
-            request, {"is_active": "1"}, Question, self.question_admin
+            request, {"is_active": ["1"]}, Question, self.question_admin
         )
 
         self.assertEqual(filter_instance.value(), "1")
@@ -335,8 +341,9 @@ class TestDynamoDBAdminFilters(TestDynamoDBAdminIntegration):
         """Test date range filter functionality."""
         request = self._create_request("/?pub_date=today")
 
+        # Django 6.0+ expects params as lists (like QueryDict) due to value[-1] usage
         filter_instance = PublishedDateFilter(
-            request, {"pub_date": "today"}, Question, self.question_admin
+            request, {"pub_date": ["today"]}, Question, self.question_admin
         )
 
         self.assertEqual(filter_instance.value(), "today")
@@ -345,8 +352,9 @@ class TestDynamoDBAdminFilters(TestDynamoDBAdminIntegration):
         """Test numeric range filter functionality."""
         request = self._create_request("/?votes=0-10")
 
+        # Django 6.0+ expects params as lists (like QueryDict) due to value[-1] usage
         filter_instance = VoteCountFilter(
-            request, {"votes": "0-10"}, Choice, self.choice_admin
+            request, {"votes": ["0-10"]}, Choice, self.choice_admin
         )
 
         self.assertEqual(filter_instance.value(), "0-10")
@@ -355,29 +363,27 @@ class TestDynamoDBAdminFilters(TestDynamoDBAdminIntegration):
 class TestDynamoDBAdminCustomActions(TestDynamoDBAdminIntegration):
     """Test custom admin actions."""
 
+    def _get_action_names(self, admin_instance):
+        """Helper to get action names from admin, handling both strings and callables."""
+        action_names = []
+        for action in admin_instance.actions:
+            if callable(action):
+                action_names.append(action.__name__)
+            elif isinstance(action, str):
+                action_names.append(action)
+        return action_names
+
     def test_question_admin_actions(self):
         """Test QuestionAdmin custom actions."""
         # Check that custom actions are available
-        self.assertIn(
-            "mark_as_published",
-            [
-                action.__name__
-                for action in self.question_admin.actions
-                if callable(action)
-            ],
-        )
+        action_names = self._get_action_names(self.question_admin)
+        self.assertIn("mark_as_published", action_names)
 
     def test_choice_admin_actions(self):
         """Test ChoiceAdmin custom actions."""
         # Check that custom actions are available
-        self.assertIn(
-            "reset_votes",
-            [
-                action.__name__
-                for action in self.choice_admin.actions
-                if callable(action)
-            ],
-        )
+        action_names = self._get_action_names(self.choice_admin)
+        self.assertIn("reset_votes", action_names)
 
     @patch("dynamodb_adapter.managers.DynamoDBQuerySet.update")
     def test_mark_as_published_action(self, mock_update):

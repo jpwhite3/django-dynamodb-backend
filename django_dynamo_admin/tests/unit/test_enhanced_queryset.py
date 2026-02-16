@@ -18,7 +18,6 @@ from dynamodb_adapter.models import MyModel
 class EnhancedTestModel(MyModel):
     """Enhanced test model for comprehensive QuerySet testing."""
 
-    name = models.CharField(max_length=100)
     email = models.EmailField()
     age = models.IntegerField()
     salary = models.DecimalField(max_digits=10, decimal_places=2)
