@@ -46,7 +46,7 @@ class DynamoDBQuerySet(QuerySet):
         clone._scan_index_forward = self._scan_index_forward
         clone._last_evaluated_key = self._last_evaluated_key
         clone._use_query_operation = self._use_query_operation
-        clone._empty = getattr(self, '_empty', False)
+        clone._empty = getattr(self, "_empty", False)
         return clone
 
     def filter(self, *args, **kwargs):
@@ -83,28 +83,28 @@ class DynamoDBQuerySet(QuerySet):
 
     def _process_q_object(self, q_obj):
         """Process a Q object and add its filters to the queryset.
-        
+
         Supports AND, OR connectors and negation (~Q).
         """
         clone = self._clone()
-        
+
         # Build a compound condition from the Q object
         condition = clone._build_condition_from_q(q_obj)
         if condition is not None:
             clone._dynamodb_scan_filters.append(condition)
-        
+
         return clone
 
     def _build_condition_from_q(self, q_obj):
         """Recursively build a boto3 condition from a Q object.
-        
+
         Handles AND, OR connectors and negation.
         Returns a single boto3 condition or None if no valid conditions.
         """
         from boto3.dynamodb.conditions import Not
-        
+
         child_conditions = []
-        
+
         for child in q_obj.children:
             if isinstance(child, Q):
                 # Recursively build condition from nested Q object
@@ -116,14 +116,14 @@ class DynamoDBQuerySet(QuerySet):
                 lookup, value = child
                 field_name, *lookup_parts = lookup.split("__")
                 lookup_type = lookup_parts[0] if lookup_parts else "exact"
-                
+
                 condition = self._convert_lookup(field_name, lookup_type, value)
                 if condition is not None:
                     child_conditions.append(condition)
-        
+
         if not child_conditions:
             return None
-        
+
         # Combine child conditions based on the connector
         if len(child_conditions) == 1:
             combined = child_conditions[0]
@@ -137,22 +137,22 @@ class DynamoDBQuerySet(QuerySet):
             combined = child_conditions[0]
             for cond in child_conditions[1:]:
                 combined = combined & cond
-        
+
         # Apply negation if Q object is negated (~Q)
         if q_obj.negated:
             combined = Not(combined)
-        
+
         return combined
 
     def exclude(self, *args, **kwargs):
         """Exclude objects matching the given filters.
-        
+
         Accepts both Q objects as positional arguments and keyword arguments.
         """
         from boto3.dynamodb.conditions import Not
-        
+
         clone = self._clone()
-        
+
         # Handle Q objects passed as positional arguments
         for arg in args:
             if isinstance(arg, Q):
@@ -250,7 +250,7 @@ class DynamoDBQuerySet(QuerySet):
 
     def get_or_create(self, defaults=None, **kwargs):
         """Get an existing object or create a new one.
-        
+
         Returns a tuple of (object, created), where created is a boolean
         specifying whether an object was created.
         """
@@ -265,7 +265,7 @@ class DynamoDBQuerySet(QuerySet):
 
     def update_or_create(self, defaults=None, **kwargs):
         """Update an existing object or create a new one.
-        
+
         Returns a tuple of (object, created), where created is a boolean
         specifying whether an object was created.
         """
@@ -285,19 +285,22 @@ class DynamoDBQuerySet(QuerySet):
         """Return the latest object according to the given field(s)."""
         if not fields:
             # Try to use model's get_latest_by
-            if hasattr(self.model._meta, 'get_latest_by') and self.model._meta.get_latest_by:
+            if (
+                hasattr(self.model._meta, "get_latest_by")
+                and self.model._meta.get_latest_by
+            ):
                 fields = (self.model._meta.get_latest_by,)
             else:
                 raise ValueError(
                     "latest() requires either fields as arguments or "
                     "get_latest_by in the model's Meta."
                 )
-        
+
         # Order by field(s) descending and get first
         field_name = fields[0] if isinstance(fields[0], str) else fields[0]
-        clone = self.order_by(f'-{field_name}')
+        clone = self.order_by(f"-{field_name}")
         result = clone.first()
-        
+
         if result is None:
             raise ObjectDoesNotExist(
                 f"{self.model.__name__} matching query does not exist."
@@ -308,19 +311,22 @@ class DynamoDBQuerySet(QuerySet):
         """Return the earliest object according to the given field(s)."""
         if not fields:
             # Try to use model's get_latest_by
-            if hasattr(self.model._meta, 'get_latest_by') and self.model._meta.get_latest_by:
+            if (
+                hasattr(self.model._meta, "get_latest_by")
+                and self.model._meta.get_latest_by
+            ):
                 fields = (self.model._meta.get_latest_by,)
             else:
                 raise ValueError(
                     "earliest() requires either fields as arguments or "
                     "get_latest_by in the model's Meta."
                 )
-        
+
         # Order by field(s) ascending and get first
         field_name = fields[0] if isinstance(fields[0], str) else fields[0]
         clone = self.order_by(field_name)
         result = clone.first()
-        
+
         if result is None:
             raise ObjectDoesNotExist(
                 f"{self.model.__name__} matching query does not exist."
@@ -333,42 +339,42 @@ class DynamoDBQuerySet(QuerySet):
         clone._scan_index_forward = not clone._scan_index_forward
         return clone
 
-    def in_bulk(self, id_list=None, *, field_name='pk'):
+    def in_bulk(self, id_list=None, *, field_name="pk"):
         """Return a dictionary mapping each of the given IDs to the object with that ID.
-        
+
         Uses DynamoDB BatchGetItem for efficient retrieval.
         """
         if id_list is None:
             # Return all objects as dict (inefficient for large tables)
             return {getattr(obj, field_name): obj for obj in self}
-        
+
         if not id_list:
             return {}
-        
+
         # Determine the actual field name
-        if field_name == 'pk':
+        if field_name == "pk":
             field_name = self.model._meta.pk.name
-        
+
         result = {}
-        
+
         # DynamoDB BatchGetItem supports up to 100 items
         batch_size = 100
         id_list = list(id_list)
-        
+
         for i in range(0, len(id_list), batch_size):
-            batch_ids = id_list[i:i + batch_size]
-            
+            batch_ids = id_list[i : i + batch_size]
+
             try:
                 pynamodb_model = self.model._get_pynamodb_model()
-                
+
                 # Use batch_get for efficient retrieval
                 items = pynamodb_model.batch_get(batch_ids)
-                
+
                 for item in items:
                     django_instance = self._convert_pynamodb_to_django(item)
                     key = getattr(django_instance, field_name)
                     result[key] = django_instance
-                    
+
             except Exception as e:
                 logger.error(f"Error in in_bulk: {e}")
                 # Fallback to individual gets
@@ -378,13 +384,20 @@ class DynamoDBQuerySet(QuerySet):
                         result[pk_value] = obj
                     except ObjectDoesNotExist:
                         pass
-        
+
         return result
 
-    def bulk_create(self, objs, batch_size=None, ignore_conflicts=False, 
-                    update_conflicts=False, update_fields=None, unique_fields=None):
+    def bulk_create(
+        self,
+        objs,
+        batch_size=None,
+        ignore_conflicts=False,
+        update_conflicts=False,
+        update_fields=None,
+        unique_fields=None,
+    ):
         """Create multiple objects using DynamoDB batch_write.
-        
+
         Args:
             objs: List of model instances to create
             batch_size: Number of objects to create per batch (max 25 for DynamoDB)
@@ -392,39 +405,39 @@ class DynamoDBQuerySet(QuerySet):
             update_conflicts: Not supported in DynamoDB (will be ignored)
             update_fields: Not supported in DynamoDB (will be ignored)
             unique_fields: Not supported in DynamoDB (will be ignored)
-        
+
         Returns:
             List of created objects
         """
         if update_conflicts:
             logger.warning("update_conflicts is not supported in DynamoDB bulk_create")
-        
+
         # DynamoDB supports batch writes up to 25 items
         max_batch_size = 25
         if batch_size is None:
             batch_size = max_batch_size
         else:
             batch_size = min(batch_size, max_batch_size)
-        
+
         created_objects = []
-        
+
         for i in range(0, len(objs), batch_size):
-            batch = objs[i:i + batch_size]
-            
+            batch = objs[i : i + batch_size]
+
             try:
                 pynamodb_model = self.model._get_pynamodb_model()
-                
+
                 with pynamodb_model.batch_write() as batch_writer:
                     for obj in batch:
                         # Ensure object has field values
-                        if not hasattr(obj, '_field_values'):
+                        if not hasattr(obj, "_field_values"):
                             obj._field_values = {}
-                        
+
                         # Get PynamoDB instance
                         pynamodb_instance = obj._get_pynamodb_instance()
                         batch_writer.save(pynamodb_instance)
                         created_objects.append(obj)
-                        
+
             except Exception as e:
                 logger.error(f"Error in bulk_create batch: {e}")
                 if not ignore_conflicts:
@@ -438,42 +451,42 @@ class DynamoDBQuerySet(QuerySet):
                         if not ignore_conflicts:
                             raise save_error
                         logger.warning(f"Skipped object due to conflict: {save_error}")
-        
+
         return created_objects
 
     def bulk_update(self, objs, fields, batch_size=None):
         """Update specific fields on multiple objects.
-        
+
         Note: DynamoDB doesn't have a native bulk update operation,
         so this iterates through objects individually.
-        
+
         Args:
             objs: List of model instances with updated values
             fields: List of field names to update
             batch_size: Ignored (included for API compatibility)
-        
+
         Returns:
             Number of objects updated
         """
         if not fields:
             raise ValueError("bulk_update() requires at least one field")
-        
+
         updated_count = 0
-        
+
         for obj in objs:
             try:
                 # Only save specified fields
                 for field in fields:
                     if hasattr(obj, field):
                         obj._field_values[field] = getattr(obj, field)
-                
+
                 obj.save(update_fields=fields)
                 updated_count += 1
-                
+
             except Exception as e:
                 logger.error(f"Error updating object in bulk_update: {e}")
                 raise
-        
+
         return updated_count
 
     def order_by(self, *field_names):
@@ -535,31 +548,34 @@ class DynamoDBQuerySet(QuerySet):
 
     def aggregate(self, **kwargs):
         """Aggregation support for DynamoDB.
-        
+
         Supports Count, Sum, Avg, Min, Max by fetching data and computing client-side.
         Note: For large datasets, this may be slow and consume read capacity.
         """
         result = {}
-        
+
         # Cache for field values when multiple aggregations need the same data
         field_values_cache = {}
 
         for alias, aggregation in kwargs.items():
             if hasattr(aggregation, "source_expressions"):
                 agg_func = aggregation.__class__.__name__
-                
+
                 # Extract field name from the aggregation
                 field_name = None
-                if hasattr(aggregation, "source_expressions") and aggregation.source_expressions:
+                if (
+                    hasattr(aggregation, "source_expressions")
+                    and aggregation.source_expressions
+                ):
                     expr = aggregation.source_expressions[0]
                     if hasattr(expr, "name"):
                         field_name = expr.name
                     elif hasattr(expr, "target") and hasattr(expr.target, "name"):
                         field_name = expr.target.name
-                
+
                 if agg_func == "Count":
                     result[alias] = self.count()
-                    
+
                 elif agg_func in ("Sum", "Avg", "Min", "Max") and field_name:
                     # Get field values (use cache if available)
                     if field_name not in field_values_cache:
@@ -572,9 +588,9 @@ class DynamoDBQuerySet(QuerySet):
                                 except (ValueError, TypeError):
                                     pass
                         field_values_cache[field_name] = values
-                    
+
                     values = field_values_cache[field_name]
-                    
+
                     if not values:
                         result[alias] = None
                     elif agg_func == "Sum":
@@ -585,13 +601,15 @@ class DynamoDBQuerySet(QuerySet):
                         result[alias] = min(values)
                     elif agg_func == "Max":
                         result[alias] = max(values)
-                        
+
                 elif agg_func in ("Sum", "Avg", "Min", "Max"):
                     # Count variant (e.g., Count('*'))
                     if agg_func == "Sum":
                         result[alias] = self.count()
                     else:
-                        logger.warning(f"Cannot determine field for {agg_func} aggregation")
+                        logger.warning(
+                            f"Cannot determine field for {agg_func} aggregation"
+                        )
                         result[alias] = None
                 else:
                     logger.warning(f"Aggregation {agg_func} not supported in DynamoDB")
@@ -706,9 +724,9 @@ class DynamoDBQuerySet(QuerySet):
     def iterator(self):
         """Return an iterator over the results."""
         # Return empty iterator if this is a none() queryset
-        if getattr(self, '_empty', False):
+        if getattr(self, "_empty", False):
             return iter([])
-        
+
         if self._use_query_operation and self._dynamodb_query_filters:
             return iter(self._execute_query())
         else:

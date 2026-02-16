@@ -36,89 +36,95 @@ logger = logging.getLogger(__name__)
 
 class DynamoDBDateHierarchyMixin:
     """Mixin to add date_hierarchy support for DynamoDB models."""
-    
+
     def get_date_hierarchy_queryset(self, queryset, date_hierarchy, request):
         """Apply date hierarchy filtering to the queryset.
-        
+
         DynamoDB doesn't have native date component filtering, so we use
         range queries on the date field.
         """
         from datetime import datetime, timedelta
         from calendar import monthrange
-        
+
         if not date_hierarchy:
             return queryset
-            
+
         # Get date parameters from request
-        year = request.GET.get('year')
-        month = request.GET.get('month') 
-        day = request.GET.get('day')
-        
+        year = request.GET.get("year")
+        month = request.GET.get("month")
+        day = request.GET.get("day")
+
         if not year:
             return queryset
-            
+
         try:
             year = int(year)
-            
+
             if day and month:
                 # Filter for specific day
                 month = int(month)
                 day = int(day)
                 start_date = datetime(year, month, day)
                 end_date = start_date + timedelta(days=1)
-                
+
             elif month:
                 # Filter for specific month
                 month = int(month)
                 start_date = datetime(year, month, 1)
                 _, last_day = monthrange(year, month)
                 end_date = datetime(year, month, last_day, 23, 59, 59)
-                
+
             else:
                 # Filter for specific year
                 start_date = datetime(year, 1, 1)
                 end_date = datetime(year, 12, 31, 23, 59, 59)
-            
+
             # Apply range filter
             queryset = queryset.filter(
-                **{f"{date_hierarchy}__gte": start_date,
-                   f"{date_hierarchy}__lte": end_date}
+                **{
+                    f"{date_hierarchy}__gte": start_date,
+                    f"{date_hierarchy}__lte": end_date,
+                }
             )
-            
-            logger.info(f"Applied date_hierarchy filter: {date_hierarchy} from {start_date} to {end_date}")
-            
+
+            logger.info(
+                f"Applied date_hierarchy filter: {date_hierarchy} from {start_date} to {end_date}"
+            )
+
         except (ValueError, TypeError) as e:
             logger.warning(f"Invalid date_hierarchy parameters: {e}")
-            
+
         return queryset
-    
+
     def get_date_hierarchy_drilldown(self, queryset, date_hierarchy):
         """Get available date values for the hierarchy drilldown.
-        
+
         Returns dict with years, months, days that have data.
         """
         from collections import defaultdict
         from datetime import datetime
-        
+
         if not date_hierarchy:
             return None
-            
+
         dates = defaultdict(lambda: defaultdict(set))
-        
+
         try:
             for obj in queryset:
                 date_val = getattr(obj, date_hierarchy, None)
                 if date_val:
                     if isinstance(date_val, str):
-                        date_val = datetime.fromisoformat(date_val.replace('Z', '+00:00'))
-                    if hasattr(date_val, 'year'):
+                        date_val = datetime.fromisoformat(
+                            date_val.replace("Z", "+00:00")
+                        )
+                    if hasattr(date_val, "year"):
                         year = date_val.year
                         month = date_val.month
                         day = date_val.day
                         dates[year][month].add(day)
         except Exception as e:
             logger.error(f"Error getting date_hierarchy drilldown: {e}")
-            
+
         return dict(dates)
 
 
@@ -282,10 +288,10 @@ class DynamoDBAdminForm(ModelForm):
 
 class DynamoDBAdminLoggingMixin:
     """Mixin to add comprehensive admin action logging."""
-    
+
     def log_admin_action(self, request, obj, action, message=""):
         """Log an admin action for auditing.
-        
+
         Args:
             request: The HTTP request
             obj: The object being acted upon (can be None for bulk actions)
@@ -294,18 +300,18 @@ class DynamoDBAdminLoggingMixin:
         """
         from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
         from django.contrib.contenttypes.models import ContentType
-        
+
         action_flags = {
-            'add': ADDITION,
-            'change': CHANGE,
-            'delete': DELETION,
-            'view': CHANGE,  # No VIEW flag, use CHANGE
-            'bulk_delete': DELETION,
-            'export': CHANGE,
+            "add": ADDITION,
+            "change": CHANGE,
+            "delete": DELETION,
+            "view": CHANGE,  # No VIEW flag, use CHANGE
+            "bulk_delete": DELETION,
+            "export": CHANGE,
         }
-        
+
         action_flag = action_flags.get(action, CHANGE)
-        
+
         try:
             if obj:
                 LogEntry.objects.log_action(
@@ -314,33 +320,33 @@ class DynamoDBAdminLoggingMixin:
                     object_id=str(obj.pk),
                     object_repr=str(obj)[:200],
                     action_flag=action_flag,
-                    change_message=message or f"DynamoDB {action} action"
+                    change_message=message or f"DynamoDB {action} action",
                 )
-            
+
             # Also log to application logger
             logger.info(
                 f"Admin action: user={request.user.username}, "
                 f"action={action}, model={self.model.__name__}, "
                 f"object={obj.pk if obj else 'bulk'}, message={message}"
             )
-            
+
         except Exception as e:
             logger.error(f"Error logging admin action: {e}")
-    
+
     def log_addition(self, request, obj, message):
         """Log object addition."""
         super().log_addition(request, obj, message)
-        self.log_admin_action(request, obj, 'add', str(message))
-        
+        self.log_admin_action(request, obj, "add", str(message))
+
     def log_change(self, request, obj, message):
         """Log object change."""
         super().log_change(request, obj, message)
-        self.log_admin_action(request, obj, 'change', str(message))
-        
+        self.log_admin_action(request, obj, "change", str(message))
+
     def log_deletion(self, request, obj, object_repr):
         """Log object deletion."""
         super().log_deletion(request, obj, object_repr)
-        self.log_admin_action(request, obj, 'delete', f"Deleted: {object_repr}")
+        self.log_admin_action(request, obj, "delete", f"Deleted: {object_repr}")
 
 
 class DynamoDBAdmin(
@@ -364,7 +370,7 @@ class DynamoDBAdmin(
     list_per_page = 25  # Reasonable for DynamoDB scan operations
     list_max_show_all = 100
     preserve_filters = True
-    
+
     # date_hierarchy support - set to a DateTimeField name to enable
     date_hierarchy = None
 
@@ -439,7 +445,7 @@ class DynamoDBAdmin(
             logger.info(
                 f"Admin using {'Query' if queryset._use_query_operation else 'Scan'} operation"
             )
-        
+
         # Apply date_hierarchy filtering
         if self.date_hierarchy:
             queryset = self.get_date_hierarchy_queryset(

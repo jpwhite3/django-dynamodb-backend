@@ -120,7 +120,7 @@ class TestDatabaseWrapper(TestCase):
         with patch.object(
             self.db_wrapper._connection_pool,
             "get_connection",
-            side_effect=Exception("Connection failed")
+            side_effect=Exception("Connection failed"),
         ):
             with self.assertRaises(utils.DatabaseError):
                 self.db_wrapper.get_new_connection(conn_params)

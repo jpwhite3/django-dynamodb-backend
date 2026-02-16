@@ -410,30 +410,25 @@ class TestQObjectSupport(TestCase):
 
     def setUp(self):
         from django.db.models import Q
+
         self.queryset = DynamoDBQuerySet(model=EnhancedTestModel)
         self.Q = Q
 
     def test_simple_q_object_and(self):
         """Test simple Q object with AND (default connector)."""
-        qs = self.queryset.filter(
-            self.Q(name="John") & self.Q(age=25)
-        )
+        qs = self.queryset.filter(self.Q(name="John") & self.Q(age=25))
         # Should have one filter (compound condition)
         self.assertEqual(len(qs._dynamodb_scan_filters), 1)
 
     def test_simple_q_object_or(self):
         """Test Q object with OR connector."""
-        qs = self.queryset.filter(
-            self.Q(name="John") | self.Q(name="Jane")
-        )
+        qs = self.queryset.filter(self.Q(name="John") | self.Q(name="Jane"))
         # Should have one filter (compound OR condition)
         self.assertEqual(len(qs._dynamodb_scan_filters), 1)
 
     def test_negated_q_object(self):
         """Test negated Q object (~Q)."""
-        qs = self.queryset.filter(
-            ~self.Q(is_active=False)
-        )
+        qs = self.queryset.filter(~self.Q(is_active=False))
         # Should have one filter (negated condition)
         self.assertEqual(len(qs._dynamodb_scan_filters), 1)
 
@@ -441,42 +436,32 @@ class TestQObjectSupport(TestCase):
         """Test complex nested Q objects."""
         # (name="John" AND age__gte=18) OR (name="Jane" AND age__gte=21)
         qs = self.queryset.filter(
-            (self.Q(name="John") & self.Q(age__gte=18)) |
-            (self.Q(name="Jane") & self.Q(age__gte=21))
+            (self.Q(name="John") & self.Q(age__gte=18))
+            | (self.Q(name="Jane") & self.Q(age__gte=21))
         )
         # Should have one filter (complex compound condition)
         self.assertEqual(len(qs._dynamodb_scan_filters), 1)
 
     def test_q_object_with_negation_inside_or(self):
         """Test Q object with negation inside OR."""
-        qs = self.queryset.filter(
-            self.Q(name="John") | ~self.Q(is_active=False)
-        )
+        qs = self.queryset.filter(self.Q(name="John") | ~self.Q(is_active=False))
         self.assertEqual(len(qs._dynamodb_scan_filters), 1)
 
     def test_exclude_with_q_object(self):
         """Test exclude() with Q object."""
-        qs = self.queryset.exclude(
-            self.Q(name="John")
-        )
+        qs = self.queryset.exclude(self.Q(name="John"))
         # Should have one filter (negated condition)
         self.assertEqual(len(qs._dynamodb_scan_filters), 1)
 
     def test_exclude_with_q_object_or(self):
         """Test exclude() with Q object containing OR."""
-        qs = self.queryset.exclude(
-            self.Q(name="John") | self.Q(name="Jane")
-        )
+        qs = self.queryset.exclude(self.Q(name="John") | self.Q(name="Jane"))
         # Should negate the entire OR condition
         self.assertEqual(len(qs._dynamodb_scan_filters), 1)
 
     def test_filter_and_exclude_chain(self):
         """Test chaining filter() and exclude() with Q objects."""
-        qs = (
-            self.queryset
-            .filter(self.Q(is_active=True))
-            .exclude(self.Q(age__lt=18))
-        )
+        qs = self.queryset.filter(self.Q(is_active=True)).exclude(self.Q(age__lt=18))
         # Should have two separate filters
         self.assertEqual(len(qs._dynamodb_scan_filters), 2)
 
@@ -484,7 +469,7 @@ class TestQObjectSupport(TestCase):
         """Test that Q object filtering creates proper clones."""
         qs1 = self.queryset.filter(self.Q(name="John"))
         qs2 = qs1.filter(self.Q(age=25))
-        
+
         # Original queryset should be unchanged
         self.assertEqual(len(self.queryset._dynamodb_scan_filters), 0)
         # First filter should have one condition
@@ -529,7 +514,11 @@ class TestAggregationSupport(TestCase):
         mock_obj3 = MagicMock()
         mock_obj3.age = 35
 
-        with patch.object(self.queryset, "iterator", return_value=iter([mock_obj1, mock_obj2, mock_obj3])):
+        with patch.object(
+            self.queryset,
+            "iterator",
+            return_value=iter([mock_obj1, mock_obj2, mock_obj3]),
+        ):
             result = self.queryset.aggregate(total_age=Sum("age"))
 
             self.assertIn("total_age", result)
@@ -546,7 +535,11 @@ class TestAggregationSupport(TestCase):
         mock_obj3 = MagicMock()
         mock_obj3.salary = 70000
 
-        with patch.object(self.queryset, "iterator", return_value=iter([mock_obj1, mock_obj2, mock_obj3])):
+        with patch.object(
+            self.queryset,
+            "iterator",
+            return_value=iter([mock_obj1, mock_obj2, mock_obj3]),
+        ):
             result = self.queryset.aggregate(avg_salary=Avg("salary"))
 
             self.assertIn("avg_salary", result)
@@ -563,7 +556,11 @@ class TestAggregationSupport(TestCase):
         mock_obj3 = MagicMock()
         mock_obj3.age = 35
 
-        with patch.object(self.queryset, "iterator", return_value=iter([mock_obj1, mock_obj2, mock_obj3])):
+        with patch.object(
+            self.queryset,
+            "iterator",
+            return_value=iter([mock_obj1, mock_obj2, mock_obj3]),
+        ):
             result = self.queryset.aggregate(min_age=Min("age"))
 
             self.assertIn("min_age", result)
@@ -580,7 +577,11 @@ class TestAggregationSupport(TestCase):
         mock_obj3 = MagicMock()
         mock_obj3.age = 65
 
-        with patch.object(self.queryset, "iterator", return_value=iter([mock_obj1, mock_obj2, mock_obj3])):
+        with patch.object(
+            self.queryset,
+            "iterator",
+            return_value=iter([mock_obj1, mock_obj2, mock_obj3]),
+        ):
             result = self.queryset.aggregate(max_age=Max("age"))
 
             self.assertIn("max_age", result)
@@ -607,7 +608,7 @@ class TestAggregationSupport(TestCase):
                     sum_age=Sum("age"),
                     avg_age=Avg("age"),
                     min_age=Min("age"),
-                    max_age=Max("age")
+                    max_age=Max("age"),
                 )
 
                 self.assertEqual(result["total"], 3)
@@ -638,7 +639,11 @@ class TestAggregationSupport(TestCase):
         mock_obj3 = MagicMock()
         mock_obj3.age = 35
 
-        with patch.object(self.queryset, "iterator", return_value=iter([mock_obj1, mock_obj2, mock_obj3])):
+        with patch.object(
+            self.queryset,
+            "iterator",
+            return_value=iter([mock_obj1, mock_obj2, mock_obj3]),
+        ):
             result = self.queryset.aggregate(total=Sum("age"))
 
             # Should skip None values
@@ -651,139 +656,139 @@ class TestDynamoDBFExpressions(TestCase):
     def test_dynamodb_f_creation(self):
         """Test basic DynamoDBF creation."""
         from django_dynamodb_backend.expressions import DynamoDBF
-        
-        f = DynamoDBF('votes')
-        self.assertEqual(f.field_name, 'votes')
+
+        f = DynamoDBF("votes")
+        self.assertEqual(f.field_name, "votes")
         self.assertIsNone(f._operation)
         self.assertIsNone(f._operand)
 
     def test_dynamodb_f_add(self):
         """Test DynamoDBF addition (atomic increment)."""
         from django_dynamodb_backend.expressions import DynamoDBF
-        
-        f = DynamoDBF('votes') + 1
-        self.assertEqual(f.field_name, 'votes')
-        self.assertEqual(f._operation, 'ADD')
-        self.assertEqual(f._operand, Decimal('1'))
+
+        f = DynamoDBF("votes") + 1
+        self.assertEqual(f.field_name, "votes")
+        self.assertEqual(f._operation, "ADD")
+        self.assertEqual(f._operand, Decimal("1"))
 
     def test_dynamodb_f_radd(self):
         """Test DynamoDBF reverse addition."""
         from django_dynamodb_backend.expressions import DynamoDBF
-        
-        f = 5 + DynamoDBF('count')
-        self.assertEqual(f.field_name, 'count')
-        self.assertEqual(f._operation, 'ADD')
-        self.assertEqual(f._operand, Decimal('5'))
+
+        f = 5 + DynamoDBF("count")
+        self.assertEqual(f.field_name, "count")
+        self.assertEqual(f._operation, "ADD")
+        self.assertEqual(f._operand, Decimal("5"))
 
     def test_dynamodb_f_subtract(self):
         """Test DynamoDBF subtraction (atomic decrement)."""
         from django_dynamodb_backend.expressions import DynamoDBF
-        
-        f = DynamoDBF('count') - 3
-        self.assertEqual(f.field_name, 'count')
-        self.assertEqual(f._operation, 'ADD')  # Uses negative value
-        self.assertEqual(f._operand, Decimal('-3'))
+
+        f = DynamoDBF("count") - 3
+        self.assertEqual(f.field_name, "count")
+        self.assertEqual(f._operation, "ADD")  # Uses negative value
+        self.assertEqual(f._operand, Decimal("-3"))
 
     def test_dynamodb_f_multiply(self):
         """Test DynamoDBF multiplication (non-atomic)."""
         from django_dynamodb_backend.expressions import DynamoDBF
-        
-        f = DynamoDBF('price') * 2
-        self.assertEqual(f.field_name, 'price')
-        self.assertEqual(f._operation, 'MULTIPLY')
-        self.assertEqual(f._operand, Decimal('2'))
+
+        f = DynamoDBF("price") * 2
+        self.assertEqual(f.field_name, "price")
+        self.assertEqual(f._operation, "MULTIPLY")
+        self.assertEqual(f._operand, Decimal("2"))
 
     def test_dynamodb_f_divide(self):
         """Test DynamoDBF division (non-atomic)."""
         from django_dynamodb_backend.expressions import DynamoDBF
-        
-        f = DynamoDBF('total') / 4
-        self.assertEqual(f.field_name, 'total')
-        self.assertEqual(f._operation, 'DIVIDE')
-        self.assertEqual(f._operand, Decimal('4'))
+
+        f = DynamoDBF("total") / 4
+        self.assertEqual(f.field_name, "total")
+        self.assertEqual(f._operation, "DIVIDE")
+        self.assertEqual(f._operand, Decimal("4"))
 
     def test_dynamodb_f_is_atomic(self):
         """Test is_atomic property."""
         from django_dynamodb_backend.expressions import DynamoDBF
-        
+
         # ADD operations are atomic
-        f_add = DynamoDBF('votes') + 1
+        f_add = DynamoDBF("votes") + 1
         self.assertTrue(f_add.is_atomic)
-        
+
         # Subtraction uses ADD with negative, so also atomic
-        f_sub = DynamoDBF('votes') - 1
+        f_sub = DynamoDBF("votes") - 1
         self.assertTrue(f_sub.is_atomic)
-        
+
         # Multiplication is not atomic
-        f_mul = DynamoDBF('votes') * 2
+        f_mul = DynamoDBF("votes") * 2
         self.assertFalse(f_mul.is_atomic)
 
     def test_dynamodb_f_get_update_expression(self):
         """Test generating DynamoDB update expression."""
         from django_dynamodb_backend.expressions import DynamoDBF
-        
-        f = DynamoDBF('votes') + 1
+
+        f = DynamoDBF("votes") + 1
         expr, names, values = f.get_update_expression()
-        
-        self.assertIn('SET', expr)
-        self.assertIn('#votes', expr)
-        self.assertIn(':delta', expr)
-        self.assertEqual(names['#votes'], 'votes')
-        self.assertEqual(values[':delta'], Decimal('1'))
+
+        self.assertIn("SET", expr)
+        self.assertIn("#votes", expr)
+        self.assertIn(":delta", expr)
+        self.assertEqual(names["#votes"], "votes")
+        self.assertEqual(values[":delta"], Decimal("1"))
 
     def test_dynamodb_f_apply_to_instance(self):
         """Test applying F expression to an instance."""
         from django_dynamodb_backend.expressions import DynamoDBF
-        
+
         mock_instance = MagicMock()
         mock_instance.votes = 10
-        
-        f_add = DynamoDBF('votes') + 5
+
+        f_add = DynamoDBF("votes") + 5
         result = f_add.apply_to_instance(mock_instance)
-        self.assertEqual(result, Decimal('15'))
-        
-        f_sub = DynamoDBF('votes') - 3
+        self.assertEqual(result, Decimal("15"))
+
+        f_sub = DynamoDBF("votes") - 3
         result = f_sub.apply_to_instance(mock_instance)
-        self.assertEqual(result, Decimal('7'))
+        self.assertEqual(result, Decimal("7"))
 
     def test_is_f_expression(self):
         """Test is_f_expression helper function."""
         from django.db.models import F
         from django_dynamodb_backend.expressions import DynamoDBF, is_f_expression
-        
-        self.assertTrue(is_f_expression(F('field')))
-        self.assertTrue(is_f_expression(DynamoDBF('field')))
+
+        self.assertTrue(is_f_expression(F("field")))
+        self.assertTrue(is_f_expression(DynamoDBF("field")))
         self.assertFalse(is_f_expression(42))
-        self.assertFalse(is_f_expression('string'))
+        self.assertFalse(is_f_expression("string"))
 
     def test_convert_f_expression(self):
         """Test convert_f_expression helper function."""
         from django.db.models import F
         from django_dynamodb_backend.expressions import DynamoDBF, convert_f_expression
-        
+
         # DynamoDBF should pass through
-        dynamo_f = DynamoDBF('field')
+        dynamo_f = DynamoDBF("field")
         self.assertIs(convert_f_expression(dynamo_f), dynamo_f)
-        
+
         # Regular F should be converted
-        regular_f = F('field')
+        regular_f = F("field")
         converted = convert_f_expression(regular_f)
         self.assertIsInstance(converted, DynamoDBF)
-        self.assertEqual(converted.field_name, 'field')
-        
+        self.assertEqual(converted.field_name, "field")
+
         # Non-F values should pass through
         self.assertEqual(convert_f_expression(42), 42)
-        self.assertEqual(convert_f_expression('string'), 'string')
+        self.assertEqual(convert_f_expression("string"), "string")
 
     def test_dynamodb_f_repr(self):
         """Test string representation of DynamoDBF."""
         from django_dynamodb_backend.expressions import DynamoDBF
-        
-        f = DynamoDBF('votes')
+
+        f = DynamoDBF("votes")
         self.assertEqual(repr(f), "DynamoDBF('votes')")
-        
-        f_add = DynamoDBF('votes') + 1
-        self.assertIn('ADD', repr(f_add))
+
+        f_add = DynamoDBF("votes") + 1
+        self.assertIn("ADD", repr(f_add))
 
 
 if __name__ == "__main__":

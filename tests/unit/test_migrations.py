@@ -252,7 +252,9 @@ class TestDynamoDBMigration(TestCase):
         self.migration.operations = [MagicMock(), MagicMock()]
 
     @patch("django_dynamodb_backend.migrations_dynamo.DynamoDBMigrationState.exists")
-    @patch("django_dynamodb_backend.migrations_dynamo.DynamoDBMigrationState.create_table")
+    @patch(
+        "django_dynamodb_backend.migrations_dynamo.DynamoDBMigrationState.create_table"
+    )
     def test_apply(self, mock_create_table, mock_exists):
         """Test migration apply method."""
         mock_exists.return_value = True

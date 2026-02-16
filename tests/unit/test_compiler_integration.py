@@ -378,12 +378,16 @@ class TestCompilerErrorHandling(TestCase):
         # Mock instance where getattr raises an exception
         mock_instance = MagicMock()
         # Make getattr on the instance raise when accessing any field
-        mock_instance.configure_mock(**{"test_name": property(lambda s: (_ for _ in ()).throw(AttributeError()))})
+        mock_instance.configure_mock(
+            **{"test_name": property(lambda s: (_ for _ in ()).throw(AttributeError()))}
+        )
 
         # Mock query with select fields that will trigger the exception path
         mock_col = MagicMock()
         # Make target.name raise when accessed
-        type(mock_col).target = property(lambda self: (_ for _ in ()).throw(AttributeError("No target")))
+        type(mock_col).target = property(
+            lambda self: (_ for _ in ()).throw(AttributeError("No target"))
+        )
         self.mock_query.select = [mock_col]
 
         row = self.compiler._convert_result_to_row(mock_instance)
