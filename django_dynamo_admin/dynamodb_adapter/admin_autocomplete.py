@@ -9,8 +9,7 @@ import logging
 from typing import Any, Dict, List, Optional, Union
 
 from django.contrib import admin
-from django.contrib.admin.widgets import (AutocompleteSelect,
-                                          AutocompleteSelectMultiple)
+from django.contrib.admin.widgets import AutocompleteSelect, AutocompleteSelectMultiple
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Q

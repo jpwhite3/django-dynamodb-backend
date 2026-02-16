@@ -12,7 +12,6 @@ from django.conf import settings
 from django.test import TransactionTestCase
 from moto import mock_aws
 
-
 # Pytest markers
 pytest_markers = {
     "unit": "Unit tests that don't require external dependencies",
@@ -33,16 +32,14 @@ def pytest_configure(config):
     for marker, description in pytest_markers.items():
         config.addinivalue_line("markers", f"{marker}: {description}")
 
-    # Configure Django settings
+    # Only configure Django if not already configured (via DJANGO_SETTINGS_MODULE)
     if not settings.configured:
         settings.configure(
             DEBUG=True,
             DATABASES={
                 "default": {
-                    "ENGINE": "django_dynamo_admin.database",
-                    "NAME": "test_dynamodb",
-                    "REGION": "us-east-1",
-                    "LOCAL_ENDPOINT": "http://localhost:9000",
+                    "ENGINE": "django.db.backends.sqlite3",
+                    "NAME": ":memory:",
                 }
             },
             INSTALLED_APPS=[
@@ -56,7 +53,7 @@ def pytest_configure(config):
             SECRET_KEY="test-secret-key",
             USE_TZ=True,
         )
-    django.setup()
+        django.setup()
 
 
 @pytest.fixture

@@ -4,6 +4,7 @@ import django
 from django.conf import settings
 import pytest
 
+
 def main():
     sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
     if not settings.configured:
@@ -25,16 +26,17 @@ def main():
                 "dynamodb_adapter",
                 "tests",
             ],
-            MIGRATION_MODULES = {
+            MIGRATION_MODULES={
                 "dynamodb_adapter": None,
             },
-            USE_TZ = True,
-            TIME_ZONE = "UTC",
-            DYNAMODB_REGION = "us-east-1",
-            DYNAMODB_LOCAL_ENDPOINT = "http://localhost:4566",
+            USE_TZ=True,
+            TIME_ZONE="UTC",
+            DYNAMODB_REGION="us-east-1",
+            DYNAMODB_LOCAL_ENDPOINT="http://localhost:4566",
         )
     django.setup()
     sys.exit(pytest.main(sys.argv[1:]))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

@@ -33,9 +33,11 @@ INSTALLED_APPS = [
 USE_TZ = True
 TIME_ZONE = "UTC"
 
-# DynamoDB settings for testing
-DYNAMODB_REGION = "us-east-1"
-DYNAMODB_LOCAL_ENDPOINT = "http://localhost:8000"
+# DynamoDB settings for testing - use environment variable or default to localstack
+import os
+
+DYNAMODB_REGION = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
+DYNAMODB_LOCAL_ENDPOINT = os.environ.get("DYNAMODB_ENDPOINT", "http://localhost:4566")
 
 # Logging for tests
 LOGGING = {

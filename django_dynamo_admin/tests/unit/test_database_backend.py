@@ -12,19 +12,25 @@ from django.db import utils
 from django.test import TestCase, override_settings
 from moto import mock_aws
 
-from django_dynamo_admin.database.base import (DatabaseWrapper, DynamoDBClient,
-                                               DynamoDBCreation,
-                                               DynamoDBCursor,
-                                               DynamoDBFeatures,
-                                               DynamoDBIntrospection,
-                                               DynamoDBOperations,
-                                               DynamoDBSchemaEditor,
-                                               DynamoDBValidation, TableInfo)
-from django_dynamo_admin.database.compiler import (SQLAggregateCompiler,
-                                                   SQLCompiler,
-                                                   SQLDeleteCompiler,
-                                                   SQLInsertCompiler,
-                                                   SQLUpdateCompiler)
+from django_dynamo_admin.database.base import (
+    DatabaseWrapper,
+    DynamoDBClient,
+    DynamoDBCreation,
+    DynamoDBCursor,
+    DynamoDBFeatures,
+    DynamoDBIntrospection,
+    DynamoDBOperations,
+    DynamoDBSchemaEditor,
+    DynamoDBValidation,
+    TableInfo,
+)
+from django_dynamo_admin.database.compiler import (
+    SQLAggregateCompiler,
+    SQLCompiler,
+    SQLDeleteCompiler,
+    SQLInsertCompiler,
+    SQLUpdateCompiler,
+)
 
 
 class TestDatabaseWrapper(TestCase):

@@ -13,10 +13,13 @@ from django.core.management.base import CommandError
 from django.test import TestCase
 from django.utils import timezone
 from dynamodb_adapter.migration_executor import MigrationExecutor
-from dynamodb_adapter.migrations_dynamo import (CreateTable, DataMigration,
-                                                DynamoDBMigration,
-                                                DynamoDBMigrationState,
-                                                UpdateTableCapacity)
+from dynamodb_adapter.migrations_dynamo import (
+    CreateTable,
+    DataMigration,
+    DynamoDBMigration,
+    DynamoDBMigrationState,
+    UpdateTableCapacity,
+)
 from dynamodb_adapter.models import MyModel, Question
 from moto import mock_aws
 
@@ -127,8 +130,7 @@ class TestDynamoDBMigrationIntegration(TestCase):
 
     def test_migration_dependency_resolution(self):
         """Test migration dependency resolution."""
-        from dynamodb_adapter.migration_executor import (MigrationGraph,
-                                                         MigrationNode)
+        from dynamodb_adapter.migration_executor import MigrationGraph, MigrationNode
 
         # Create test migrations with dependencies
         migration1 = MagicMock()

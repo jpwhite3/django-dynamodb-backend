@@ -3,9 +3,15 @@
 from datetime import datetime, timezone
 
 from django.contrib.auth.models import User
-from dynamodb_adapter.fields import (BooleanField, CharField, DateTimeField,
-                                     IntegerField, ListField, SetField,
-                                     TextField)
+from dynamodb_adapter.fields import (
+    BooleanField,
+    CharField,
+    DateTimeField,
+    IntegerField,
+    ListField,
+    SetField,
+    TextField,
+)
 from dynamodb_adapter.models import DynamoDBModel
 
 

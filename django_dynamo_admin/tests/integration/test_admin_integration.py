@@ -265,7 +265,7 @@ class TestAdminIntegrationWithMockDynamoDB(TestCase):
         """Test that admin-specific features work."""
         # Test that ordering is not explicitly set (DynamoDB limitation)
         # Note: 'ordering' attribute exists on all ModelAdmin classes but defaults to None
-        self.assertIsNone(getattr(self.question_admin, 'ordering', None))
+        self.assertIsNone(getattr(self.question_admin, "ordering", None))
 
         # Test that date hierarchy is configured
         # Note: This might not work in DynamoDB but should be configurable
@@ -291,17 +291,19 @@ class TestAdminErrorHandling(TestCase):
     def _create_request_with_messages(self, path="/"):
         """Create a request with proper session and messages support."""
         from django.contrib.messages.storage.fallback import FallbackStorage
-        
+
         request = self.factory.get(path)
         request.user = self.user
-        setattr(request, 'session', {})
+        setattr(request, "session", {})
         messages = FallbackStorage(request)
-        setattr(request, '_messages', messages)
+        setattr(request, "_messages", messages)
         return request
 
     def test_admin_handles_database_errors(self):
         """Test that admin gracefully handles database errors."""
-        request = self._create_request_with_messages("/admin/dynamodb_adapter/question/")
+        request = self._create_request_with_messages(
+            "/admin/dynamodb_adapter/question/"
+        )
 
         # Mock database error
         with patch.object(

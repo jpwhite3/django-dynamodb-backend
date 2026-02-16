@@ -4,10 +4,20 @@ from django.contrib.auth.models import User
 from django.core.management.base import BaseCommand
 
 # Import all demo models
-from interactive_demo.apps.blog.models import (BlogAuthor, BlogCategory,
-                                               BlogComment, BlogPost, BlogTag)
-from interactive_demo.apps.ecommerce.models import (Customer, Order, OrderItem,
-                                                    Product, ProductCategory)
+from interactive_demo.apps.blog.models import (
+    BlogAuthor,
+    BlogCategory,
+    BlogComment,
+    BlogPost,
+    BlogTag,
+)
+from interactive_demo.apps.ecommerce.models import (
+    Customer,
+    Order,
+    OrderItem,
+    Product,
+    ProductCategory,
+)
 
 
 class Command(BaseCommand):

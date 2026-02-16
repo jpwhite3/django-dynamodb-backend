@@ -26,18 +26,28 @@ from django.test import Client, RequestFactory, TestCase
 from django.test.utils import override_settings
 from dynamodb_adapter.admin import DynamoDBAdmin
 from dynamodb_adapter.admin_actions import DynamoDBActionMixin
-from dynamodb_adapter.admin_autocomplete import (DynamoDBAutocompleteMixin,
-                                                 DynamoDBAutocompleteView,
-                                                 DynamoDBAutocompleteWidget)
-from dynamodb_adapter.admin_inlines import (DynamoDBForeignKeyInline,
-                                            DynamoDBInlineFormSet,
-                                            DynamoDBStackedInline,
-                                            DynamoDBTabularInline)
-from dynamodb_adapter.gsi_optimizer import (GSIInfo, GSIOptimizer,
-                                            OptimizationRecommendation)
+from dynamodb_adapter.admin_autocomplete import (
+    DynamoDBAutocompleteMixin,
+    DynamoDBAutocompleteView,
+    DynamoDBAutocompleteWidget,
+)
+from dynamodb_adapter.admin_inlines import (
+    DynamoDBForeignKeyInline,
+    DynamoDBInlineFormSet,
+    DynamoDBStackedInline,
+    DynamoDBTabularInline,
+)
+from dynamodb_adapter.gsi_optimizer import (
+    GSIInfo,
+    GSIOptimizer,
+    OptimizationRecommendation,
+)
 from dynamodb_adapter.models import Choice, DynamoDBModel, MyModel, Question
-from dynamodb_adapter.pagination import (DynamoDBAdvancedPaginator,
-                                         DynamoDBPage, PaginationToken)
+from dynamodb_adapter.pagination import (
+    DynamoDBAdvancedPaginator,
+    DynamoDBPage,
+    PaginationToken,
+)
 
 
 class TestDynamoDBAdminInlines(TestCase):
@@ -362,8 +372,7 @@ class TestAdminAutocomplete(TestCase):
 
     def test_autocomplete_view_creation(self):
         """Test autocomplete view creation."""
-        from dynamodb_adapter.admin_autocomplete import \
-            DynamoDBAutocompleteView
+        from dynamodb_adapter.admin_autocomplete import DynamoDBAutocompleteView
 
         view = DynamoDBAutocompleteView(self.admin)
 
@@ -373,8 +382,7 @@ class TestAdminAutocomplete(TestCase):
     @patch("dynamodb_adapter.models.MyModel.objects.all")
     def test_autocomplete_search_results(self, mock_objects_all):
         """Test autocomplete search results."""
-        from dynamodb_adapter.admin_autocomplete import \
-            DynamoDBAutocompleteView
+        from dynamodb_adapter.admin_autocomplete import DynamoDBAutocompleteView
 
         # Mock search results
         mock_obj = MagicMock()
@@ -515,8 +523,7 @@ class TestManagementCommands(TestCase):
     @patch("dynamodb_adapter.performance.get_query_cache")
     def test_performance_command_execution(self, mock_cache, mock_pool):
         """Test performance command execution."""
-        from dynamodb_adapter.management.commands.dynamodb_performance import \
-            Command
+        from dynamodb_adapter.management.commands.dynamodb_performance import Command
 
         # Mock performance data
         mock_pool.return_value.get_stats.return_value = {

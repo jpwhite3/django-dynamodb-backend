@@ -7,10 +7,16 @@ from datetime import datetime
 from decimal import Decimal
 
 from django.db import models
-from pynamodb.attributes import (BinaryAttribute, BooleanAttribute,
-                                 JSONAttribute, ListAttribute, MapAttribute,
-                                 NumberAttribute, UnicodeAttribute,
-                                 UTCDateTimeAttribute)
+from pynamodb.attributes import (
+    BinaryAttribute,
+    BooleanAttribute,
+    JSONAttribute,
+    ListAttribute,
+    MapAttribute,
+    NumberAttribute,
+    UnicodeAttribute,
+    UTCDateTimeAttribute,
+)
 
 
 class FieldMapper:

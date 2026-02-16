@@ -10,15 +10,21 @@ from unittest.mock import MagicMock, Mock, patch
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 from django.utils import timezone
-from dynamodb_adapter.migration_executor import (MigrationExecutor,
-                                                 MigrationGraph,
-                                                 MigrationLoader,
-                                                 MigrationNode)
-from dynamodb_adapter.migrations_dynamo import (CreateTable, DataMigration,
-                                                DynamoDBMigration,
-                                                DynamoDBMigrationState,
-                                                DynamoDBOperation, RunPython,
-                                                UpdateTableCapacity)
+from dynamodb_adapter.migration_executor import (
+    MigrationExecutor,
+    MigrationGraph,
+    MigrationLoader,
+    MigrationNode,
+)
+from dynamodb_adapter.migrations_dynamo import (
+    CreateTable,
+    DataMigration,
+    DynamoDBMigration,
+    DynamoDBMigrationState,
+    DynamoDBOperation,
+    RunPython,
+    UpdateTableCapacity,
+)
 from dynamodb_adapter.models import Choice, MyModel, Question
 
 

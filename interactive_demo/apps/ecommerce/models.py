@@ -3,9 +3,17 @@
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
-from dynamodb_adapter.fields import (BooleanField, CharField, DateTimeField,
-                                     DecimalField, DictField, IntegerField,
-                                     ListField, SetField, TextField)
+from dynamodb_adapter.fields import (
+    BooleanField,
+    CharField,
+    DateTimeField,
+    DecimalField,
+    DictField,
+    IntegerField,
+    ListField,
+    SetField,
+    TextField,
+)
 from dynamodb_adapter.models import DynamoDBModel
 
 

@@ -4,9 +4,13 @@ DynamoDB migration for dynamodb_adapter.
 Created on 2024-08-26 12:05
 """
 
-from dynamodb_adapter.migrations_dynamo import (CreateTable, DataMigration,
-                                                DynamoDBMigration, RunPython,
-                                                UpdateTableCapacity)
+from dynamodb_adapter.migrations_dynamo import (
+    CreateTable,
+    DataMigration,
+    DynamoDBMigration,
+    RunPython,
+    UpdateTableCapacity,
+)
 from dynamodb_adapter.models import Choice, Question
 
 

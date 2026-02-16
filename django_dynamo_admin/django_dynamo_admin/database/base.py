@@ -8,8 +8,13 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
-from django.db import (DatabaseError, IntegrityError, OperationalError,
-                       ProgrammingError, utils)
+from django.db import (
+    DatabaseError,
+    IntegrityError,
+    OperationalError,
+    ProgrammingError,
+    utils,
+)
 from django.db.backends.base.base import BaseDatabaseWrapper
 from django.db.backends.base.client import BaseDatabaseClient
 from django.db.backends.base.creation import BaseDatabaseCreation

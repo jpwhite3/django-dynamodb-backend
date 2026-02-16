@@ -158,8 +158,7 @@ class CompleteSystemIntegrationTest(TestCase):
     def test_phase_5_migration_system_integration(self):
         """Test Phase 5: Migration system functionality."""
         from dynamodb_adapter.migration_executor import MigrationExecutor
-        from dynamodb_adapter.migrations_dynamo import (CreateTable,
-                                                        DynamoDBMigration)
+        from dynamodb_adapter.migrations_dynamo import CreateTable, DynamoDBMigration
 
         # Create test migration
         class TestMigration(DynamoDBMigration):

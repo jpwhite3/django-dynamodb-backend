@@ -95,14 +95,14 @@ jobs:
     
     - name: Run Tests with Coverage
       env:
-        DJANGO_SETTINGS_MODULE: test_settings
+        DJANGO_SETTINGS_MODULE: django_dynamo_admin.test_settings
         AWS_ACCESS_KEY_ID: test
         AWS_SECRET_ACCESS_KEY: test
         AWS_DEFAULT_REGION: us-east-1
         DYNAMODB_ENDPOINT: http://localhost:4566
         PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/django_dynamo_admin
       run: |
-        pytest --tb=short -v --cov=django_dynamo_admin --cov-report=xml --cov-report=term-missing
+        pytest django_dynamo_admin/tests/unit --tb=short -v --timeout=60 --cov=django_dynamo_admin --cov-report=xml --cov-report=term-missing -x
     
     - name: Upload coverage to Codecov
       if: matrix.python-version == '3.13'

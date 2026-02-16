@@ -50,7 +50,7 @@ class DynamoDBQuerySet(QuerySet):
 
     def filter(self, *args, **kwargs):
         """Add filters to the queryset.
-        
+
         Accepts both Q objects as positional arguments and keyword arguments.
         """
         clone = self._clone()
@@ -83,7 +83,7 @@ class DynamoDBQuerySet(QuerySet):
     def _process_q_object(self, q_obj):
         """Process a Q object and add its filters to the queryset."""
         clone = self._clone()
-        
+
         # Q objects have children which are tuples of (key, value) or nested Q objects
         for child in q_obj.children:
             if isinstance(child, Q):
@@ -104,7 +104,7 @@ class DynamoDBQuerySet(QuerySet):
                         clone._use_query_operation = True
                     else:
                         clone._dynamodb_scan_filters.append(dynamodb_filter)
-        
+
         return clone
 
     def exclude(self, **kwargs):
