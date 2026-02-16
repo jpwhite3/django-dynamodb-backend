@@ -32,6 +32,3 @@ ipdb = ">=0.13.13"
 faker = ">=20.1.0"
 django-redis = ">=5.4.0"
 gunicorn = ">=21.2.0"
-
-[requires]
-python_version = "3.13"
