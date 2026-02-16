@@ -127,7 +127,7 @@ class DynamoDBModelForm(DynamoDBFormMixin, forms.ModelForm):
                 model_field = self._meta.model._meta.get_field(field_name)
 
                 if hasattr(model_field, "max_length") and model_field.max_length:
-                if len(str(value)) > model_field.max_length:
+                    if len(str(value)) > model_field.max_length:
                         raise ValidationError(
                             {
                                 field_name: _(
@@ -266,7 +266,6 @@ class DynamoDBTextInput(DynamoDBWidget, TextInput):
     """Enhanced text input for DynamoDB string fields."""
 
 
-
 class DynamoDBTextarea(DynamoDBWidget, Textarea):
     """Enhanced textarea for DynamoDB text fields."""
 
@@ -289,7 +288,6 @@ class DynamoDBNumberInput(DynamoDBWidget, TextInput):
 
 class DynamoDBSelect(DynamoDBWidget, Select):
     """Enhanced select widget for DynamoDB choice fields."""
-
 
 
 class DynamoDBCheckbox(CheckboxInput):

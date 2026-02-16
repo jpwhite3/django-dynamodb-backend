@@ -167,7 +167,7 @@ class UpdateTableCapacity(DynamoDBOperation):
                     f"Updating capacity for table: {pynamodb_model.Meta.table_name}"
                 )
                 pynamodb_model.update_table(**update_kwargs)
-                logger.info(f"Successfully updated table capacity")
+                logger.info("Successfully updated table capacity")
 
         except Exception as e:
             logger.error(f"Error updating table capacity for {self.model_name}: {e}")
@@ -192,7 +192,7 @@ class UpdateTableCapacity(DynamoDBOperation):
                 write_capacity_units=self._old_capacity["write_capacity"],
             )
 
-            logger.info(f"Successfully restored table capacity")
+            logger.info("Successfully restored table capacity")
 
         except Exception as e:
             logger.error(f"Error restoring table capacity for {self.model_name}: {e}")

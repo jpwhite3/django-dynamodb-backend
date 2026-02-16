@@ -587,7 +587,7 @@ class TestAggregationSupport(TestCase):
 
     def test_aggregate_multiple(self):
         """Test multiple aggregations at once."""
-        from django.db.models import Sum, Avg, Min, Max, Count
+        from django.db.models import Avg, Count, Max, Min, Sum
 
         mock_obj1 = MagicMock()
         mock_obj1.age = 25
@@ -617,7 +617,7 @@ class TestAggregationSupport(TestCase):
 
     def test_aggregate_empty_queryset(self):
         """Test aggregation on empty queryset."""
-        from django.db.models import Sum, Avg
+        from django.db.models import Avg, Sum
 
         with patch.object(self.queryset, "iterator", return_value=iter([])):
             result = self.queryset.aggregate(total=Sum("age"), average=Avg("age"))
@@ -752,6 +752,7 @@ class TestDynamoDBFExpressions(TestCase):
     def test_is_f_expression(self):
         """Test is_f_expression helper function."""
         from django.db.models import F
+
         from django_dynamodb_backend.expressions import DynamoDBF, is_f_expression
 
         self.assertTrue(is_f_expression(F("field")))
@@ -762,6 +763,7 @@ class TestDynamoDBFExpressions(TestCase):
     def test_convert_f_expression(self):
         """Test convert_f_expression helper function."""
         from django.db.models import F
+
         from django_dynamodb_backend.expressions import DynamoDBF, convert_f_expression
 
         # DynamoDBF should pass through

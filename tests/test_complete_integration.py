@@ -291,7 +291,6 @@ class CompleteSystemIntegrationTest(TestCase):
     def test_error_handling_integration(self):
         """Test error handling across all components."""
 
-
         # Test that error handling systems are in place
         # Rather than trying to force an error, test that the system can handle basic operations
         try:

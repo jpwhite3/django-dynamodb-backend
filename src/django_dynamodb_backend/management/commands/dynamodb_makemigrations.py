@@ -159,7 +159,7 @@ class Migration(DynamoDBMigration):
         ),
 """
         elif options.get("data_migration"):
-            content += f"""        DataMigration(
+            content += """        DataMigration(
             model_class=YourModel,  # Replace with your model
             migration_func=migrate_data_forward,
             reverse_func=migrate_data_reverse
@@ -174,7 +174,7 @@ class Migration(DynamoDBMigration):
 
         # Add helper functions for data migrations
         if options.get("data_migration"):
-            content += f"""
+            content += """
 
 def migrate_data_forward(item):
     \"\"\"Forward data migration function.\"\"\"

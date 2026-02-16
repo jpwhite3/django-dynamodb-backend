@@ -332,4 +332,3 @@ class DynamoDBFilterMixin:
 
 class DynamoDBAutoFilterAdmin(DynamoDBFilterMixin):
     """Admin class that automatically adds DynamoDB-optimized filters."""
-

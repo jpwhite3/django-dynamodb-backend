@@ -62,8 +62,10 @@ class ComprehensiveTestResult:
         print(f"Total Duration: {duration:.2f} seconds")
         print(f"Total Tests: {self.total_tests}")
         passed = (
-            self.total_tests - self.total_failures
-            - self.total_errors - self.total_skipped
+            self.total_tests
+            - self.total_failures
+            - self.total_errors
+            - self.total_skipped
         )
         print(f"Passed: {passed}")
         print(f"Failed: {self.total_failures}")
@@ -97,16 +99,18 @@ class ComprehensiveTestResult:
                     for test, traceback in results["details"]["failures"]:
                         print(f"  FAILURE: {test}")
                         tb_short = (
-                            traceback.split('/')[-1]
-                            if '/' in traceback else traceback[:100]
+                            traceback.split("/")[-1]
+                            if "/" in traceback
+                            else traceback[:100]
                         )
                         print(f"    {tb_short}...")
 
                     for test, traceback in results["details"]["errors"]:
                         print(f"  ERROR: {test}")
                         tb_short = (
-                            traceback.split('/')[-1]
-                            if '/' in traceback else traceback[:100]
+                            traceback.split("/")[-1]
+                            if "/" in traceback
+                            else traceback[:100]
                         )
                         print(f"    {tb_short}...")
 
@@ -199,7 +203,6 @@ class ComprehensiveTestRunner:
                 ["tests.test_enhanced_admin_features"],
             ),
         ]
-
 
         for phase_name, test_patterns in phases:
             try:

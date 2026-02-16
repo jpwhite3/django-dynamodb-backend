@@ -36,7 +36,7 @@ class Command(BaseCommand):
 
         # Check admin user
         try:
-            admin_user = User.objects.get(username="admin")
+            User.objects.get(username="admin")
             self.stdout.write("👤 Admin User: ✅ Available (admin/admin123)")
         except User.DoesNotExist:
             self.stdout.write(self.style.ERROR("👤 Admin User: ❌ Missing"))
@@ -131,7 +131,7 @@ class Command(BaseCommand):
                 ).count()
                 self.stdout.write(f"    Active: {active}, VIP: {vip}")
 
-        except Exception as e:
+        except Exception:
             # Silently skip detailed info on error
             pass
 
@@ -168,7 +168,7 @@ class Command(BaseCommand):
         try:
             from django_dynamodb_backend.performance import get_connection_pool
 
-            pool = get_connection_pool()
+            get_connection_pool()
             self.stdout.write("  Connection Pool: ✅ Available")
         except Exception:
             self.stdout.write("  Connection Pool: ⚠️  Not available")

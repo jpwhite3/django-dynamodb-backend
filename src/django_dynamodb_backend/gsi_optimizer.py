@@ -152,7 +152,7 @@ class GSIOptimizer:
             return best_gsi, operation
 
         # No suitable GSI found, use scan
-        logger.debug(f"No suitable GSI found for query, using scan")
+        logger.debug("No suitable GSI found for query, using scan")
         return None, "scan"
 
     def _score_gsi_for_query(

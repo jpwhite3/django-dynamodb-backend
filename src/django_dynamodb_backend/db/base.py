@@ -62,7 +62,7 @@ class DynamoDBConnectionPool:
         try:
             self.pool.put_nowait(connection)
             logger.debug("Returned connection to pool")
-        except:
+        except Exception:
             # Pool full, close the connection
             with self.lock:
                 self.active_connections -= 1

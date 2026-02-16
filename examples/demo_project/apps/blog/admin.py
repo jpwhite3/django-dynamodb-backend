@@ -3,10 +3,7 @@
 from django.contrib import admin
 
 from django_dynamodb_backend.admin import DynamoDBAdmin
-from django_dynamodb_backend.admin_inlines import (
-    DynamoDBStackedInline,
-    DynamoDBTabularInline,
-)
+from django_dynamodb_backend.admin_inlines import DynamoDBTabularInline
 
 from .models import BlogAuthor, BlogCategory, BlogComment, BlogPost, BlogTag
 

@@ -356,7 +356,7 @@ class MigrationExecutor:
             migration_name: Specific migration to migrate to (optional)
             fake: Mark migrations as applied without actually running them
         """
-        logger.info(f"Starting DynamoDB migration process")
+        logger.info("Starting DynamoDB migration process")
 
         # Get migration plan
         plan = self.loader.get_migration_plan(app_label, migration_name)

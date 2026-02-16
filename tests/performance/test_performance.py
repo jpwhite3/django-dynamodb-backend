@@ -68,9 +68,7 @@ class TestModelCreationPerformance(TestCase):
         for i in range(num_iterations):
             start_time = time.time()
 
-            Question(
-                question_text=f"Test question {i}", pub_date=datetime.now()
-            )
+            Question(question_text=f"Test question {i}", pub_date=datetime.now())
 
             end_time = time.time()
             times.append(end_time - start_time)

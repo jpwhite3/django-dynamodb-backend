@@ -2,7 +2,7 @@
 
 import random
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta, timezone
 from decimal import Decimal
 
 from django.contrib.auth.models import User
@@ -136,10 +136,10 @@ class Command(BaseCommand):
     def create_admin_user(self):
         """Create Django admin user"""
         try:
-            admin_user = User.objects.get(username="admin")
+            User.objects.get(username="admin")
             self.stdout.write("👤 Admin user already exists")
         except User.DoesNotExist:
-            admin_user = User.objects.create_superuser(
+            User.objects.create_superuser(
                 username="admin", email="admin@example.com", password="admin123"
             )
             self.stdout.write(

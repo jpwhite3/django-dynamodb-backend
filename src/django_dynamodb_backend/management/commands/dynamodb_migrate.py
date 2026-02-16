@@ -91,9 +91,7 @@ class Command(BaseCommand):
 
             for migration in app_migrations:
                 status = "[X]" if migration["applied"] else "[ ]"
-                dep_list = [
-                    f"{dep[0]}.{dep[1]}" for dep in migration["dependencies"]
-                ]
+                dep_list = [f"{dep[0]}.{dep[1]}" for dep in migration["dependencies"]]
                 deps = (
                     f" (depends on: {', '.join(dep_list)})"
                     if migration["dependencies"]

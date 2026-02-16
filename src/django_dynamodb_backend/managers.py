@@ -827,7 +827,7 @@ class DynamoDBQuerySet(QuerySet):
                         processed_value[0], processed_value[1]
                     )
                 else:
-                    logger.error(f"Range lookup requires a list/tuple of 2 values")
+                    logger.error("Range lookup requires a list/tuple of 2 values")
                     return None
             elif lookup_type == "isnull":
                 if processed_value:

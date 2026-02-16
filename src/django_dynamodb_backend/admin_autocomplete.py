@@ -17,7 +17,6 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 from django.views.generic import View
 
-
 logger = logging.getLogger(__name__)
 
 

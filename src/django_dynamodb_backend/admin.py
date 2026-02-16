@@ -32,8 +32,8 @@ class DynamoDBDateHierarchyMixin:
         DynamoDB doesn't have native date component filtering, so we use
         range queries on the date field.
         """
-        from datetime import datetime, timedelta
         from calendar import monthrange
+        from datetime import datetime, timedelta
 
         if not date_hierarchy:
             return queryset
@@ -287,7 +287,7 @@ class DynamoDBAdminLoggingMixin:
             action: Action type ('add', 'change', 'delete', 'view', 'bulk_delete', etc.)
             message: Additional message to log
         """
-        from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
+        from django.contrib.admin.models import ADDITION, CHANGE, DELETION, LogEntry
         from django.contrib.contenttypes.models import ContentType
 
         action_flags = {

@@ -500,7 +500,7 @@ def create_sample_data():
     for category in categories:
         try:
             category.save()
-        except:
+        except Exception:
             pass  # May already exist
 
     # Create tags
@@ -520,7 +520,7 @@ def create_sample_data():
         tag = Tag(name=tag_name)
         try:
             tag.save()
-        except:
+        except Exception:
             pass  # May already exist
 
     # Create sample blog posts
@@ -670,6 +670,7 @@ if __name__ == "__main__":
     print("\nTo use this example:")
     print("1. Apply the migrations: python manage.py dynamodb_migrate")
     print(
-        "2. Create sample data: python manage.py shell -c 'from examples.blog_example import create_sample_data; create_sample_data()'"
+        "2. Create sample data: python manage.py shell -c "
+        "'from examples.blog_example import create_sample_data; create_sample_data()'"
     )
     print("3. Access the admin at: http://localhost:8000/admin/")

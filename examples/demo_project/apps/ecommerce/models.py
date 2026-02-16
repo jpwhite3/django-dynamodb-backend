@@ -1,6 +1,5 @@
 # E-commerce Demo Models - Advanced DynamoDB Patterns
 
-from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 
 from django_dynamodb_backend.fields import (

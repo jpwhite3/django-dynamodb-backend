@@ -2,14 +2,11 @@
 
 from datetime import datetime, timezone
 
-from django.contrib.auth.models import User
-
 from django_dynamodb_backend.fields import (
     BooleanField,
     CharField,
     DateTimeField,
     IntegerField,
-    ListField,
     SetField,
     TextField,
 )
