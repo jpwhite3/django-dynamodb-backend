@@ -8,10 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **BREAKING**: Restructured project as pip-installable package with `src/` layout
+- **BREAKING**: Renamed package from `django_dynamo_admin.dynamodb_adapter` to `django_dynamodb_backend`
+- **BREAKING**: Changed database engine path from `django_dynamo_admin.database` to `django_dynamodb_backend.db`
+- Moved tests to root `tests/` directory
+- Moved demo project to `examples/demo_project/`
+- Added modern `pyproject.toml` configuration
+- Simplified `setup.py` to minimal shim for backward compatibility
 - Updated Python version requirement to 3.11+ (removed 3.12 from CI due to compatibility issues)
 - Simplified project documentation
-- Updated package structure with proper `__init__.py` files
-- Fixed import paths for test compatibility
+
+### Migration Guide
+Update your imports:
+```python
+# Before
+from django_dynamo_admin.dynamodb_adapter.models import DynamoDBModel
+from django_dynamo_admin.dynamodb_adapter.admin import DynamoDBAdmin
+INSTALLED_APPS = ['django_dynamo_admin.dynamodb_adapter']
+DATABASES = {'default': {'ENGINE': 'django_dynamo_admin.database'}}
+
+# After
+from django_dynamodb_backend.models import DynamoDBModel
+from django_dynamodb_backend.admin import DynamoDBAdmin
+INSTALLED_APPS = ['django_dynamodb_backend']
+DATABASES = {'default': {'ENGINE': 'django_dynamodb_backend.db'}}
+```
 
 ### Fixed
 - CI/CD pipeline now passes all checks (linting, formatting, security scan)
@@ -23,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed codecov integration
 - Removed internal planning and development documentation
 - Cleaned up unnecessary configuration files
+- Removed old `django_dynamo_admin/` nested directory structure
 
 ## [1.0.0] - 2024-08-27
 

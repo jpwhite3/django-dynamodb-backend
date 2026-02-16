@@ -1,6 +1,4 @@
-# Django DynamoDB Admin - Docker Compose Configuration
-
-version: '3.8'
+# Django DynamoDB Backend - Docker Compose Configuration
 
 services:
   # Main Django application
@@ -12,11 +10,12 @@ services:
       - "8000:8000"
     environment:
       - DEBUG=True
-      - DJANGO_SETTINGS_MODULE=django_dynamo_admin.settings
+      - DJANGO_SETTINGS_MODULE=examples.demo_project.settings
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - AWS_DEFAULT_REGION=us-east-1
       - DYNAMODB_ENDPOINT=http://localstack:4566
+      - PYTHONPATH=/app:/app/src
     volumes:
       - .:/app
       - django_media:/app/media
@@ -67,17 +66,17 @@ services:
       context: .
       target: test
     environment:
-      - DJANGO_SETTINGS_MODULE=test_settings
+      - DJANGO_SETTINGS_MODULE=tests.settings
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - AWS_DEFAULT_REGION=us-east-1
       - DYNAMODB_ENDPOINT=http://localstack:4566
-      - PYTHONPATH=/app:/app/django_dynamo_admin
+      - PYTHONPATH=/app:/app/src
     depends_on:
       - localstack
     networks:
       - django-network
-    command: ["pytest"]
+    command: ["pytest", "tests/"]
     profiles:
       - testing
     deploy:
@@ -95,11 +94,12 @@ services:
       - "8003:8000"
     environment:
       - DEBUG=False
-      - DJANGO_SETTINGS_MODULE=django_dynamo_admin.settings.production
+      - DJANGO_SETTINGS_MODULE=examples.demo_project.settings
       - AWS_DEFAULT_REGION=us-east-1
       - DYNAMODB_MAX_CONNECTIONS=20
       - DYNAMODB_ENABLE_CACHE=true
       - SECRET_KEY=your-production-secret-key-here
+      - PYTHONPATH=/app:/app/src
     volumes:
       - django_static_prod:/app/staticfiles
       - django_media_prod:/app/media
@@ -129,28 +129,3 @@ volumes:
 networks:
   django-network:
     driver: bridge
-
-# Override for production deployment
-# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
----
-# docker-compose.prod.yml
-version: '3.8'
-
-services:
-  web:
-    build:
-      target: production
-    environment:
-      - DEBUG=False
-      - DJANGO_SETTINGS_MODULE=django_dynamo_admin.settings.production
-    profiles:
-      - production
-
-  # Remove development services
-  dynamodb-local:
-    profiles:
-      - development
-  
-  dynamodb-admin:
-    profiles:
-      - development

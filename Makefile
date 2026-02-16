@@ -53,7 +53,7 @@ test:
 test-local:
 	@echo "🧪 Running Test Suite on host machine..."
 	docker compose up -d localstack redis
-	PYTHONPATH=django_dynamo_admin pipenv run python run_tests.py $(TEST_PATH)
+	PYTHONPATH=src pipenv run python run_tests.py $(TEST_PATH)
 	docker compose down
 
 lint:

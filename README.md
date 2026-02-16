@@ -49,12 +49,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_dynamo_admin.dynamodb_adapter',
+    'django_dynamodb_backend',
 ]
 
-# DynamoDB settings
-DYNAMODB_REGION = 'us-east-1'
-DYNAMODB_LOCAL_ENDPOINT = 'http://localhost:4566'  # For local development
+DATABASES = {
+    'default': {
+        'ENGINE': 'django_dynamodb_backend.db',
+        'NAME': 'my_app',
+        'OPTIONS': {
+            'region_name': 'us-east-1',
+            'endpoint_url': 'http://localhost:4566',  # For local development
+        },
+    }
+}
 ```
 
 ### 2. Configure AWS Credentials
@@ -73,14 +80,18 @@ aws configure
 
 ```python
 # models.py
-from django_dynamo_admin.dynamodb_adapter.models import DynamoDBModel
+from django_dynamodb_backend.models import DynamoDBModel
+from django_dynamodb_backend.fields import CharField, TextField, BooleanField
 
 class BlogPost(DynamoDBModel):
-    slug = models.CharField(max_length=100, primary_key=True)
-    title = models.CharField(max_length=200)
-    content = models.TextField()
-    author = models.CharField(max_length=100)
-    published = models.BooleanField(default=False)
+    slug = CharField(max_length=100, primary_key=True)
+    title = CharField(max_length=200)
+    content = TextField()
+    author = CharField(max_length=100)
+    published = BooleanField(default=False)
+    
+    class Meta:
+        table_name = 'blog_posts'
 ```
 
 ### 4. Create Admin Interface
@@ -88,7 +99,7 @@ class BlogPost(DynamoDBModel):
 ```python
 # admin.py
 from django.contrib import admin
-from django_dynamo_admin.dynamodb_adapter.admin import DynamoDBAdmin
+from django_dynamodb_backend.admin import DynamoDBAdmin
 from .models import BlogPost
 
 @admin.register(BlogPost)
@@ -116,7 +127,7 @@ pipenv run black --check .
 pipenv run isort --check-only .
 
 # Run tests
-pipenv run pytest django_dynamo_admin/tests/unit
+pipenv run pytest tests/
 ```
 
 ### Using Docker for Local DynamoDB
@@ -132,18 +143,20 @@ docker-compose up -d
 
 ```
 django-dynamodb-backend/
-├── django_dynamo_admin/           # Main package
-│   ├── dynamodb_adapter/          # DynamoDB Django integration
-│   │   ├── admin.py               # Django Admin integration
-│   │   ├── models.py              # DynamoDB model base classes
-│   │   ├── fields.py              # Field type mapping
-│   │   └── managers.py            # QuerySet implementation
-│   ├── django_dynamo_admin/       # Django project settings
-│   │   └── database/              # Custom database backend
-│   └── tests/                     # Test suite
-├── examples/                      # Example code
+├── src/
+│   └── django_dynamodb_backend/   # Pip-installable package
+│       ├── admin.py               # Django Admin integration
+│       ├── models.py              # DynamoDB model base classes
+│       ├── fields.py              # Field type mapping
+│       ├── managers.py            # QuerySet implementation
+│       ├── db/                    # Custom database backend
+│       │   ├── base.py
+│       │   └── compiler.py
+│       └── management/commands/   # Management commands
+├── tests/                         # Test suite
+├── examples/                      # Example code and demo project
 ├── docs/                          # Documentation
-└── interactive_demo/              # Demo application
+└── pyproject.toml                 # Package configuration
 ```
 
 ## Contributing

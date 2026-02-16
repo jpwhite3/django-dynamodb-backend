@@ -81,7 +81,7 @@ python manage.py startapp myapp
 
 ```python
 from django.db import models
-from dynamodb_adapter.models import DynamoDBModel
+from django_dynamodb_backend.models import DynamoDBModel
 
 class Book(DynamoDBModel):
     """A simple book model to demonstrate DynamoDB integration."""
@@ -143,7 +143,7 @@ python manage.py dynamodb_makemigrations myapp --create-table Book
 This creates a file like `myapp/dynamodb_migrations/0001_create_book_table.py`:
 
 ```python
-from dynamodb_adapter.migrations_dynamo import DynamoDBMigration, CreateTable
+from django_dynamodb_backend.migrations_dynamo import DynamoDBMigration, CreateTable
 from myapp.models import Book
 
 class Migration(DynamoDBMigration):
@@ -174,8 +174,8 @@ python manage.py dynamodb_migrate
 
 ```python
 from django.contrib import admin
-from dynamodb_adapter.admin import DynamoDBAdmin
-from dynamodb_adapter.admin_filters import DynamoDBBooleanFilter, DynamoDBDateRangeFilter
+from django_dynamodb_backend.admin import DynamoDBAdmin
+from django_dynamodb_backend.admin_filters import DynamoDBBooleanFilter, DynamoDBDateRangeFilter
 from .models import Book
 
 class GenreFilter(admin.SimpleListFilter):

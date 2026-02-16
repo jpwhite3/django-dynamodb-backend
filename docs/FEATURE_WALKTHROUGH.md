@@ -83,7 +83,7 @@ class BlogPostAdmin(DynamoDBAdmin):
 Edit related models inline with DynamoDB-optimized batch operations:
 
 ```python
-from dynamodb_adapter.admin_inlines import DynamoDBTabularInline
+from django_dynamodb_backend.admin_inlines import DynamoDBTabularInline
 
 class BlogCommentInline(DynamoDBTabularInline):
     model = BlogComment
@@ -114,7 +114,7 @@ class BlogPostAdmin(DynamoDBAdmin):
 For complex related models with many fields:
 
 ```python
-from dynamodb_adapter.admin_inlines import DynamoDBStackedInline
+from django_dynamodb_backend.admin_inlines import DynamoDBStackedInline
 
 class OrderItemInline(DynamoDBStackedInline):
     model = OrderItem
@@ -176,7 +176,7 @@ class DynamoDBInlineFormSet(BaseInlineFormSet):
 The system automatically selects the most efficient GSI for queries:
 
 ```python
-from dynamodb_adapter.gsi_optimizer import GSIOptimizer
+from django_dynamodb_backend.gsi_optimizer import GSIOptimizer
 
 class ProductAdmin(DynamoDBAdmin):
     def get_queryset(self, request):
@@ -277,7 +277,7 @@ query_patterns = {
 Unlike traditional Django pagination, DynamoDB requires token-based pagination for efficiency:
 
 ```python
-from dynamodb_adapter.pagination import DynamoDBAdvancedPaginator, PaginationToken
+from django_dynamodb_backend.pagination import DynamoDBAdvancedPaginator, PaginationToken
 
 class DynamoDBAdvancedPaginator(Paginator):
     def __init__(self, queryset, per_page, **kwargs):
@@ -381,7 +381,7 @@ class PaginationToken:
 Relationship fields use optimized autocomplete with GSI queries:
 
 ```python
-from dynamodb_adapter.admin_autocomplete import DynamoDBAutocompleteMixin
+from django_dynamodb_backend.admin_autocomplete import DynamoDBAutocompleteMixin
 
 @admin.register(BlogPost)
 class BlogPostAdmin(DynamoDBAutocompleteMixin, DynamoDBAdmin):
@@ -467,7 +467,7 @@ class DynamoDBAutocompleteView(View):
 Advanced actions provide confirmation pages with DynamoDB cost estimates:
 
 ```python
-from dynamodb_adapter.admin_actions import DynamoDBActionMixin
+from django_dynamodb_backend.admin_actions import DynamoDBActionMixin
 
 class ProductAdmin(DynamoDBActionMixin, DynamoDBAdmin):
     actions = [
@@ -723,7 +723,7 @@ class PerformanceMonitor:
 Complete audit trail for all admin actions:
 
 ```python
-from dynamodb_adapter.admin_permissions import SecureDynamoDBAdmin
+from django_dynamodb_backend.admin_permissions import SecureDynamoDBAdmin
 
 class SecureProductAdmin(SecureDynamoDBAdmin):
     """Admin with comprehensive security and audit logging"""
@@ -831,7 +831,7 @@ Complete migration system for DynamoDB table changes:
 
 ```python
 # migrations/0001_initial_tables.py
-from dynamodb_adapter.migrations_dynamo import DynamoDBMigration, CreateTable
+from django_dynamodb_backend.migrations_dynamo import DynamoDBMigration, CreateTable
 
 class Migration(DynamoDBMigration):
     
@@ -856,7 +856,7 @@ class Migration(DynamoDBMigration):
     ]
 
 # migrations/0002_add_gsi.py  
-from dynamodb_adapter.migrations_dynamo import DynamoDBMigration, AddGSI
+from django_dynamodb_backend.migrations_dynamo import DynamoDBMigration, AddGSI
 
 class Migration(DynamoDBMigration):
     
@@ -899,7 +899,7 @@ Migrate data between table structures:
 
 ```python
 # migrations/0003_data_migration.py
-from dynamodb_adapter.migrations_dynamo import DynamoDBMigration, DataMigration
+from django_dynamodb_backend.migrations_dynamo import DynamoDBMigration, DataMigration
 
 def migrate_blog_posts(apps, schema_editor):
     """Migrate blog posts to new structure"""
@@ -1131,11 +1131,11 @@ Here's a comprehensive example combining all features:
 
 ```python
 from django.contrib import admin
-from dynamodb_adapter.admin import DynamoDBAdmin
-from dynamodb_adapter.admin_inlines import DynamoDBTabularInline
-from dynamodb_adapter.admin_actions import DynamoDBActionMixin
-from dynamodb_adapter.admin_autocomplete import DynamoDBAutocompleteMixin
-from dynamodb_adapter.admin_permissions import SecureDynamoDBAdmin
+from django_dynamodb_backend.admin import DynamoDBAdmin
+from django_dynamodb_backend.admin_inlines import DynamoDBTabularInline
+from django_dynamodb_backend.admin_actions import DynamoDBActionMixin
+from django_dynamodb_backend.admin_autocomplete import DynamoDBAutocompleteMixin
+from django_dynamodb_backend.admin_permissions import SecureDynamoDBAdmin
 
 class OrderItemInline(DynamoDBTabularInline):
     model = OrderItem

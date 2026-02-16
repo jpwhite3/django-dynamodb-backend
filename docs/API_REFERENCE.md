@@ -89,7 +89,7 @@ Dictionary containing the current field values for the instance.
 #### Example Usage
 
 ```python
-from dynamodb_adapter.models import DynamoDBModel
+from django_dynamodb_backend.models import DynamoDBModel
 from django.db import models
 
 class MyModel(DynamoDBModel):
@@ -433,7 +433,7 @@ Exports selected objects to CSV format.
 
 ```python
 from django.contrib import admin
-from dynamodb_adapter.admin import DynamoDBAdmin
+from django_dynamodb_backend.admin import DynamoDBAdmin
 from .models import Book
 
 @admin.register(Book)
@@ -544,7 +544,7 @@ Reverses the migration by reversing all operations.
 #### Example
 
 ```python
-from dynamodb_adapter.migrations_dynamo import DynamoDBMigration, CreateTable
+from django_dynamodb_backend.migrations_dynamo import DynamoDBMigration, CreateTable
 from myapp.models import Book
 
 class Migration(DynamoDBMigration):
@@ -771,7 +771,7 @@ Saves the form data to a model instance.
 #### Example
 
 ```python
-from dynamodb_adapter.admin_forms import DynamoDBModelForm
+from django_dynamodb_backend.admin_forms import DynamoDBModelForm
 from .models import Book
 
 class BookForm(DynamoDBModelForm):

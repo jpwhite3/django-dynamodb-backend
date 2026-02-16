@@ -698,7 +698,7 @@ def calculate_capacity_requirements():
 
 ```python
 # dynamodb_migrations/0002_update_capacity.py
-from dynamodb_adapter.migrations_dynamo import DynamoDBMigration, UpdateTableCapacity
+from django_dynamodb_backend.migrations_dynamo import DynamoDBMigration, UpdateTableCapacity
 from myapp.models import Book
 
 class Migration(DynamoDBMigration):
@@ -875,7 +875,7 @@ LOGGING = {
 from django.http import JsonResponse, HttpResponse
 from django.views.generic import View
 import boto3
-from dynamodb_adapter.models import Book
+from django_dynamodb_backend.models import Book
 
 class HealthCheckView(View):
     """Comprehensive health check endpoint."""

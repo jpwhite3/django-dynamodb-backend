@@ -9,12 +9,13 @@ from datetime import datetime, timedelta
 
 from django.contrib import admin
 from django.db import models
-from dynamodb_adapter.admin import DynamoDBAdmin
-from dynamodb_adapter.admin_filters import (
+
+from django_dynamodb_backend.admin import DynamoDBAdmin
+from django_dynamodb_backend.admin_filters import (
     DynamoDBBooleanFilter,
     DynamoDBDateRangeFilter,
 )
-from dynamodb_adapter.models import DynamoDBModel
+from django_dynamodb_backend.models import DynamoDBModel
 
 # =====================================
 # Models

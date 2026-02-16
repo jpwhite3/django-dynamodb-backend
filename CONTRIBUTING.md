@@ -29,7 +29,7 @@ pipenv install --dev
 3. **Run Tests**
 
 ```bash
-pipenv run pytest django_dynamo_admin/tests/unit
+pipenv run pytest tests/
 ```
 
 ## Development Workflow
@@ -93,20 +93,23 @@ We follow conventional commits:
 ### Running Tests
 
 ```bash
-# Run unit tests
-pipenv run pytest django_dynamo_admin/tests/unit
+# Run all tests
+pipenv run pytest tests/
+
+# Run unit tests only
+pipenv run pytest tests/unit/
 
 # Run with coverage
-pipenv run pytest --cov=django_dynamo_admin
+pipenv run pytest --cov=src/django_dynamodb_backend
 
 # Run specific test file
-pipenv run pytest django_dynamo_admin/tests/unit/test_models.py
+pipenv run pytest tests/unit/test_models.py
 ```
 
 ### Test Structure
 
 ```
-django_dynamo_admin/tests/
+tests/
 ├── unit/           # Unit tests
 ├── integration/    # Integration tests
 └── performance/    # Performance tests

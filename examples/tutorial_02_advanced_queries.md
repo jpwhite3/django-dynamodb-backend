@@ -14,7 +14,7 @@ Let's create a more complex library system with authors, publishers, and reviews
 
 ```python
 from django.db import models
-from dynamodb_adapter.models import DynamoDBModel
+from django_dynamodb_backend.models import DynamoDBModel
 from datetime import datetime, timedelta
 import uuid
 
