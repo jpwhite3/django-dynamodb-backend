@@ -13,9 +13,27 @@ from django.test import TransactionTestCase
 from moto import mock_aws
 
 
+# Pytest markers
+pytest_markers = {
+    "unit": "Unit tests that don't require external dependencies",
+    "integration": "Integration tests that may require external services",
+    "performance": "Performance tests that measure execution time",
+    "slow": "Tests that take more than 1 second to run",
+    "admin": "Tests related to Django admin functionality",
+    "models": "Tests related to model functionality",
+    "backend": "Tests related to database backend",
+    "compiler": "Tests related to SQL compiler",
+}
+
+
 # Configure Django for testing
-def pytest_configure():
-    """Configure Django settings for pytest."""
+def pytest_configure(config):
+    """Configure Django settings and pytest markers."""
+    # Register markers
+    for marker, description in pytest_markers.items():
+        config.addinivalue_line("markers", f"{marker}: {description}")
+
+    # Configure Django settings
     if not settings.configured:
         settings.configure(
             DEBUG=True,
@@ -118,26 +136,6 @@ class TestEnvironment:
         """Clean up any test tables."""
         # This could clean up DynamoDB Local tables after tests
         pass
-
-
-# Pytest markers
-pytest_markers = {
-    "unit": "Unit tests that don't require external dependencies",
-    "integration": "Integration tests that may require external services",
-    "performance": "Performance tests that measure execution time",
-    "slow": "Tests that take more than 1 second to run",
-    "admin": "Tests related to Django admin functionality",
-    "models": "Tests related to model functionality",
-    "backend": "Tests related to database backend",
-    "compiler": "Tests related to SQL compiler",
-}
-
-
-# Register markers with pytest
-def pytest_configure(config):
-    """Configure pytest markers."""
-    for marker, description in pytest_markers.items():
-        config.addinivalue_line("markers", f"{marker}: {description}")
 
 
 # Test collection customization
