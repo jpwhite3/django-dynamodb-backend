@@ -16,9 +16,14 @@ from django.utils.safestring import mark_safe
 
 from .admin_actions import DynamoDBActionMixin
 from .admin_autocomplete import DynamoDBAutocompleteMixin
-from .admin_filters import (DynamoDBFilterMixin, IsActiveFilter,
-                            NameSearchFilter, PublishedDateFilter,
-                            StatusFilter, VoteCountFilter)
+from .admin_filters import (
+    DynamoDBFilterMixin,
+    IsActiveFilter,
+    NameSearchFilter,
+    PublishedDateFilter,
+    StatusFilter,
+    VoteCountFilter,
+)
 from .admin_forms import DynamoDBModelForm, get_dynamodb_widget_for_field
 from .admin_inlines import DynamoDBStackedInline, DynamoDBTabularInline
 from .admin_permissions import SecureDynamoDBAdmin

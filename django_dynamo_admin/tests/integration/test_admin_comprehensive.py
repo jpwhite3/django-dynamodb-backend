@@ -13,15 +13,22 @@ from django.contrib.messages.storage.fallback import FallbackStorage
 from django.http import HttpRequest
 from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
-from dynamodb_adapter.admin import (ChoiceAdmin, DynamoDBAdmin,
-                                    DynamoDBChangeList, DynamoDBPaginator,
-                                    QuestionAdmin)
-from dynamodb_adapter.admin_filters import (IsActiveFilter,
-                                            PublishedDateFilter,
-                                            VoteCountFilter)
-from dynamodb_adapter.admin_forms import DynamoDBModelForm
-from dynamodb_adapter.models import Choice, MyModel, Question
 from moto import mock_aws
+
+from django_dynamo_admin.dynamodb_adapter.admin import (
+    ChoiceAdmin,
+    DynamoDBAdmin,
+    DynamoDBChangeList,
+    DynamoDBPaginator,
+    QuestionAdmin,
+)
+from django_dynamo_admin.dynamodb_adapter.admin_filters import (
+    IsActiveFilter,
+    PublishedDateFilter,
+    VoteCountFilter,
+)
+from django_dynamo_admin.dynamodb_adapter.admin_forms import DynamoDBModelForm
+from django_dynamo_admin.dynamodb_adapter.models import Choice, MyModel, Question
 
 
 class TestDynamoDBAdminIntegration(TestCase):
@@ -419,8 +426,10 @@ class TestDynamoDBAdminSite(TestDynamoDBAdminIntegration):
 
     def test_admin_site_customization(self):
         """Test custom admin site features."""
-        from dynamodb_adapter.admin import (DynamoDBAdminSite,
-                                            dynamodb_admin_site)
+        from django_dynamo_admin.dynamodb_adapter.admin import (
+            DynamoDBAdminSite,
+            dynamodb_admin_site,
+        )
 
         self.assertIsInstance(dynamodb_admin_site, DynamoDBAdminSite)
         self.assertEqual(dynamodb_admin_site.site_header, "DynamoDB Django Admin")
@@ -429,7 +438,7 @@ class TestDynamoDBAdminSite(TestDynamoDBAdminIntegration):
 
     def test_admin_site_index_context(self):
         """Test admin site index with custom context."""
-        from dynamodb_adapter.admin import dynamodb_admin_site
+        from django_dynamo_admin.dynamodb_adapter.admin import dynamodb_admin_site
 
         request = self._create_request()
 

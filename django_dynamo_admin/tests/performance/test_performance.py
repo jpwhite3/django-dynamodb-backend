@@ -9,9 +9,13 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 from django.test import TestCase, override_settings
-from dynamodb_adapter.managers import DynamoDBManager, DynamoDBQuerySet
-from dynamodb_adapter.models import Choice, MyModel, Question
 from moto import mock_aws
+
+from django_dynamo_admin.dynamodb_adapter.managers import (
+    DynamoDBManager,
+    DynamoDBQuerySet,
+)
+from django_dynamo_admin.dynamodb_adapter.models import Choice, MyModel, Question
 
 
 class TestModelCreationPerformance(TestCase):
@@ -166,7 +170,8 @@ class TestFieldMappingPerformance(TestCase):
     def test_field_mapping_performance(self):
         """Test performance of field type mapping."""
         from django.db import models
-        from dynamodb_adapter.fields import FieldMapper
+
+        from django_dynamo_admin.dynamodb_adapter.fields import FieldMapper
 
         # Test various field types
         field_types = [
@@ -213,7 +218,8 @@ class TestFieldMappingPerformance(TestCase):
         from decimal import Decimal
 
         from django.db import models
-        from dynamodb_adapter.fields import FieldMapper
+
+        from django_dynamo_admin.dynamodb_adapter.fields import FieldMapper
 
         # Test conversion for various types
         test_cases = [
@@ -268,7 +274,9 @@ class TestDatabaseBackendPerformance(TestCase):
 
     def setUp(self):
         """Set up database backend."""
-        from django_dynamo_admin.database.base import DatabaseWrapper
+        from django_dynamo_admin.django_dynamo_admin.database.base import (
+            DatabaseWrapper,
+        )
 
         self.db_settings = {
             "ENGINE": "django_dynamo_admin.database",
@@ -323,7 +331,9 @@ class TestCompilerPerformance(TestCase):
 
     def setUp(self):
         """Set up compiler."""
-        from django_dynamo_admin.database.compiler import SQLCompiler
+        from django_dynamo_admin.django_dynamo_admin.database.compiler import (
+            SQLCompiler,
+        )
 
         self.query = MagicMock()
         self.connection = MagicMock()

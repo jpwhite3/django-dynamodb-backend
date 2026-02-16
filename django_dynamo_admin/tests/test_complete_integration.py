@@ -15,11 +15,20 @@ from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import models
 from django.test import Client, RequestFactory, TestCase
-from dynamodb_adapter.admin import DynamoDBAdmin
-from dynamodb_adapter.migration_executor import MigrationExecutor
-from dynamodb_adapter.migrations_dynamo import CreateTable, DynamoDBMigration
-from dynamodb_adapter.models import Choice, DynamoDBModel, MyModel, Question
 from moto import mock_aws
+
+from django_dynamo_admin.dynamodb_adapter.admin import DynamoDBAdmin
+from django_dynamo_admin.dynamodb_adapter.migration_executor import MigrationExecutor
+from django_dynamo_admin.dynamodb_adapter.migrations_dynamo import (
+    CreateTable,
+    DynamoDBMigration,
+)
+from django_dynamo_admin.dynamodb_adapter.models import (
+    Choice,
+    DynamoDBModel,
+    MyModel,
+    Question,
+)
 
 
 class CompleteIntegrationTestModel(DynamoDBModel):
@@ -61,8 +70,12 @@ class CompleteSystemIntegrationTest(TestCase):
 
     def test_phase_1_database_backend_integration(self):
         """Test Phase 1: Database backend functionality."""
-        from django_dynamo_admin.database.base import DatabaseWrapper
-        from django_dynamo_admin.database.compiler import SQLCompiler
+        from django_dynamo_admin.django_dynamo_admin.database.base import (
+            DatabaseWrapper,
+        )
+        from django_dynamo_admin.django_dynamo_admin.database.compiler import (
+            SQLCompiler,
+        )
 
         # Test database wrapper initialization
         wrapper = DatabaseWrapper(
@@ -83,7 +96,8 @@ class CompleteSystemIntegrationTest(TestCase):
     def test_phase_2_field_mapping_integration(self):
         """Test Phase 2: Field mapping system."""
         from django.db import models
-        from dynamodb_adapter.fields import FieldMapper
+
+        from django_dynamo_admin.dynamodb_adapter.fields import FieldMapper
 
         # Test various field mappings
         char_field = models.CharField(max_length=100)
@@ -101,7 +115,10 @@ class CompleteSystemIntegrationTest(TestCase):
 
     def test_phase_3_queryset_manager_integration(self):
         """Test Phase 3: QuerySet and Manager functionality."""
-        from dynamodb_adapter.managers import DynamoDBManager, DynamoDBQuerySet
+        from django_dynamo_admin.dynamodb_adapter.managers import (
+            DynamoDBManager,
+            DynamoDBQuerySet,
+        )
 
         # Test manager
         manager = DynamoDBManager()
@@ -131,8 +148,8 @@ class CompleteSystemIntegrationTest(TestCase):
         mock_pynamodb_model.scan.return_value = []
         mock_get_model.return_value = mock_pynamodb_model
 
-        from dynamodb_adapter.admin import DynamoDBAdmin
-        from dynamodb_adapter.admin_filters import IsActiveFilter
+        from django_dynamo_admin.dynamodb_adapter.admin import DynamoDBAdmin
+        from django_dynamo_admin.dynamodb_adapter.admin_filters import IsActiveFilter
 
         # Test admin class creation
         admin_site = AdminSite()
@@ -157,9 +174,13 @@ class CompleteSystemIntegrationTest(TestCase):
 
     def test_phase_5_migration_system_integration(self):
         """Test Phase 5: Migration system functionality."""
-        from dynamodb_adapter.migration_executor import MigrationExecutor
-        from dynamodb_adapter.migrations_dynamo import (CreateTable,
-                                                        DynamoDBMigration)
+        from django_dynamo_admin.dynamodb_adapter.migration_executor import (
+            MigrationExecutor,
+        )
+        from django_dynamo_admin.dynamodb_adapter.migrations_dynamo import (
+            CreateTable,
+            DynamoDBMigration,
+        )
 
         # Create test migration
         class TestMigration(DynamoDBMigration):
@@ -281,7 +302,8 @@ class CompleteSystemIntegrationTest(TestCase):
     def test_error_handling_integration(self):
         """Test error handling across all components."""
         from django.core.exceptions import ImproperlyConfigured
-        from dynamodb_adapter.models import DynamoDBModel
+
+        from django_dynamo_admin.dynamodb_adapter.models import DynamoDBModel
 
         # Test that error handling systems are in place
         # Rather than trying to force an error, test that the system can handle basic operations
@@ -296,8 +318,8 @@ class CompleteSystemIntegrationTest(TestCase):
 
     def test_performance_features_integration(self):
         """Test performance optimization features."""
-        from dynamodb_adapter.admin import DynamoDBPaginator
-        from dynamodb_adapter.managers import DynamoDBQuerySet
+        from django_dynamo_admin.dynamodb_adapter.admin import DynamoDBPaginator
+        from django_dynamo_admin.dynamodb_adapter.managers import DynamoDBQuerySet
 
         # Test pagination
         test_data = ["item1", "item2", "item3", "item4", "item5"]
@@ -312,7 +334,9 @@ class CompleteSystemIntegrationTest(TestCase):
 
     def test_security_features_integration(self):
         """Test security features across the system."""
-        from dynamodb_adapter.admin_permissions import DynamoDBPermissionMixin
+        from django_dynamo_admin.dynamodb_adapter.admin_permissions import (
+            DynamoDBPermissionMixin,
+        )
 
         # Test permission checking
         permission_mixin = DynamoDBPermissionMixin()
@@ -332,7 +356,8 @@ class CompleteSystemIntegrationTest(TestCase):
     def test_form_integration(self):
         """Test form integration across the system."""
         from django.db import models
-        from dynamodb_adapter.admin_forms import DynamoDBModelForm
+
+        from django_dynamo_admin.dynamodb_adapter.admin_forms import DynamoDBModelForm
 
         # Create test form
         class TestForm(DynamoDBModelForm):
@@ -371,8 +396,9 @@ class SystemCompatibilityTest(TestCase):
     def test_django_admin_compatibility(self):
         """Test compatibility with Django admin system."""
         from django.contrib.admin import site
-        from dynamodb_adapter.admin import DynamoDBAdmin
-        from dynamodb_adapter.models import MyModel
+
+        from django_dynamo_admin.dynamodb_adapter.admin import DynamoDBAdmin
+        from django_dynamo_admin.dynamodb_adapter.models import MyModel
 
         # Test admin registration
         try:
@@ -388,7 +414,8 @@ class SystemCompatibilityTest(TestCase):
     def test_django_forms_compatibility(self):
         """Test compatibility with Django forms."""
         from django import forms
-        from dynamodb_adapter.admin_forms import DynamoDBModelForm
+
+        from django_dynamo_admin.dynamodb_adapter.admin_forms import DynamoDBModelForm
 
         # Test form inheritance
         self.assertTrue(issubclass(DynamoDBModelForm, forms.ModelForm))
@@ -422,7 +449,9 @@ class SystemCompatibilityTest(TestCase):
         }
 
         # This should not raise an exception
-        from django_dynamo_admin.database.base import DatabaseWrapper
+        from django_dynamo_admin.django_dynamo_admin.database.base import (
+            DatabaseWrapper,
+        )
 
         wrapper = DatabaseWrapper(db_config)
         self.assertIsNotNone(wrapper)

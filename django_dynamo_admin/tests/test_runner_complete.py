@@ -262,7 +262,9 @@ def run_quick_validation():
 
     # Test 2: Database backend import
     try:
-        from django_dynamo_admin.database.base import DatabaseWrapper
+        from django_dynamo_admin.django_dynamo_admin.database.base import (
+            DatabaseWrapper,
+        )
 
         print("✅ Database backend import successful")
     except Exception as e:
@@ -271,7 +273,7 @@ def run_quick_validation():
 
     # Test 3: Model import
     try:
-        from dynamodb_adapter.models import DynamoDBModel
+        from django_dynamo_admin.dynamodb_adapter.models import DynamoDBModel
 
         print("✅ DynamoDBModel import successful")
     except Exception as e:
@@ -280,7 +282,7 @@ def run_quick_validation():
 
     # Test 4: Admin import
     try:
-        from dynamodb_adapter.admin import DynamoDBAdmin
+        from django_dynamo_admin.dynamodb_adapter.admin import DynamoDBAdmin
 
         print("✅ DynamoDBAdmin import successful")
     except Exception as e:
@@ -289,7 +291,9 @@ def run_quick_validation():
 
     # Test 5: Migration system import
     try:
-        from dynamodb_adapter.migrations_dynamo import DynamoDBMigration
+        from django_dynamo_admin.dynamodb_adapter.migrations_dynamo import (
+            DynamoDBMigration,
+        )
 
         print("✅ Migration system import successful")
     except Exception as e:

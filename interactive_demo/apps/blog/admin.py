@@ -2,8 +2,7 @@
 
 from django.contrib import admin
 from dynamodb_adapter.admin import DynamoDBAdmin
-from dynamodb_adapter.admin_inlines import (DynamoDBStackedInline,
-                                            DynamoDBTabularInline)
+from dynamodb_adapter.admin_inlines import DynamoDBStackedInline, DynamoDBTabularInline
 
 from .models import BlogAuthor, BlogCategory, BlogComment, BlogPost, BlogTag
 

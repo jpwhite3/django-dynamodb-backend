@@ -1,0 +1,1 @@
+# Django DynamoDB Admin package

@@ -15,8 +15,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.utils import timezone
-from pynamodb.attributes import (NumberAttribute, UnicodeAttribute,
-                                 UTCDateTimeAttribute)
+from pynamodb.attributes import NumberAttribute, UnicodeAttribute, UTCDateTimeAttribute
 from pynamodb.exceptions import DoesNotExist, TableError
 from pynamodb.models import Model as PynamoDBModel
 

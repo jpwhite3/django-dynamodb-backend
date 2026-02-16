@@ -8,18 +8,32 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from django.core.exceptions import (ImproperlyConfigured,
-                                    MultipleObjectsReturned,
-                                    ObjectDoesNotExist)
+from django.core.exceptions import (
+    ImproperlyConfigured,
+    MultipleObjectsReturned,
+    ObjectDoesNotExist,
+)
 from django.db import models
 from django.test import TestCase, override_settings
-from dynamodb_adapter.fields import DynamoDBFieldDescriptor, FieldMapper
-from dynamodb_adapter.managers import DynamoDBManager, DynamoDBQuerySet
-from dynamodb_adapter.models import DynamoDBModel, DynamoDBModelMeta
-from pynamodb.attributes import (BinaryAttribute, BooleanAttribute,
-                                 JSONAttribute, NumberAttribute,
-                                 UnicodeAttribute, UTCDateTimeAttribute)
+from pynamodb.attributes import (
+    BinaryAttribute,
+    BooleanAttribute,
+    JSONAttribute,
+    NumberAttribute,
+    UnicodeAttribute,
+    UTCDateTimeAttribute,
+)
 from pynamodb.models import Model as PynamoDBModel
+
+from django_dynamo_admin.dynamodb_adapter.fields import (
+    DynamoDBFieldDescriptor,
+    FieldMapper,
+)
+from django_dynamo_admin.dynamodb_adapter.managers import (
+    DynamoDBManager,
+    DynamoDBQuerySet,
+)
+from django_dynamo_admin.dynamodb_adapter.models import DynamoDBModel, DynamoDBModelMeta
 
 
 class TestFieldMapping(TestCase):

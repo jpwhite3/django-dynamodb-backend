@@ -8,9 +8,9 @@ from unittest.mock import MagicMock, patch
 from django.db import models
 from django.db.models.sql import Query
 from django.test import TestCase
-from dynamodb_adapter.models import MyModel
 
-from django_dynamo_admin.database.compiler import SQLCompiler
+from django_dynamo_admin.django_dynamo_admin.database.compiler import SQLCompiler
+from django_dynamo_admin.dynamodb_adapter.models import MyModel
 
 
 class TestSQLCompilerIntegration(TestCase):

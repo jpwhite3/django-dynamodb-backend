@@ -86,8 +86,11 @@ def test_field_mapping():
     try:
         from django.db import models
         from dynamodb_adapter.fields import FieldMapper
-        from pynamodb.attributes import (BooleanAttribute, NumberAttribute,
-                                         UnicodeAttribute)
+        from pynamodb.attributes import (
+            BooleanAttribute,
+            NumberAttribute,
+            UnicodeAttribute,
+        )
 
         print("\n1. Testing CharField mapping...")
         char_field = models.CharField(max_length=100)

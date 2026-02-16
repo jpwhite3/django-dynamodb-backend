@@ -24,20 +24,36 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.http import HttpRequest, QueryDict
 from django.test import Client, RequestFactory, TestCase
 from django.test.utils import override_settings
-from dynamodb_adapter.admin import DynamoDBAdmin
-from dynamodb_adapter.admin_actions import DynamoDBActionMixin
-from dynamodb_adapter.admin_autocomplete import (DynamoDBAutocompleteMixin,
-                                                 DynamoDBAutocompleteView,
-                                                 DynamoDBAutocompleteWidget)
-from dynamodb_adapter.admin_inlines import (DynamoDBForeignKeyInline,
-                                            DynamoDBInlineFormSet,
-                                            DynamoDBStackedInline,
-                                            DynamoDBTabularInline)
-from dynamodb_adapter.gsi_optimizer import (GSIInfo, GSIOptimizer,
-                                            OptimizationRecommendation)
-from dynamodb_adapter.models import Choice, DynamoDBModel, MyModel, Question
-from dynamodb_adapter.pagination import (DynamoDBAdvancedPaginator,
-                                         DynamoDBPage, PaginationToken)
+
+from django_dynamo_admin.dynamodb_adapter.admin import DynamoDBAdmin
+from django_dynamo_admin.dynamodb_adapter.admin_actions import DynamoDBActionMixin
+from django_dynamo_admin.dynamodb_adapter.admin_autocomplete import (
+    DynamoDBAutocompleteMixin,
+    DynamoDBAutocompleteView,
+    DynamoDBAutocompleteWidget,
+)
+from django_dynamo_admin.dynamodb_adapter.admin_inlines import (
+    DynamoDBForeignKeyInline,
+    DynamoDBInlineFormSet,
+    DynamoDBStackedInline,
+    DynamoDBTabularInline,
+)
+from django_dynamo_admin.dynamodb_adapter.gsi_optimizer import (
+    GSIInfo,
+    GSIOptimizer,
+    OptimizationRecommendation,
+)
+from django_dynamo_admin.dynamodb_adapter.models import (
+    Choice,
+    DynamoDBModel,
+    MyModel,
+    Question,
+)
+from django_dynamo_admin.dynamodb_adapter.pagination import (
+    DynamoDBAdvancedPaginator,
+    DynamoDBPage,
+    PaginationToken,
+)
 
 
 class TestDynamoDBAdminInlines(TestCase):
@@ -362,8 +378,9 @@ class TestAdminAutocomplete(TestCase):
 
     def test_autocomplete_view_creation(self):
         """Test autocomplete view creation."""
-        from dynamodb_adapter.admin_autocomplete import \
-            DynamoDBAutocompleteView
+        from django_dynamo_admin.dynamodb_adapter.admin_autocomplete import (
+            DynamoDBAutocompleteView,
+        )
 
         view = DynamoDBAutocompleteView(self.admin)
 
@@ -373,8 +390,9 @@ class TestAdminAutocomplete(TestCase):
     @patch("dynamodb_adapter.models.MyModel.objects.all")
     def test_autocomplete_search_results(self, mock_objects_all):
         """Test autocomplete search results."""
-        from dynamodb_adapter.admin_autocomplete import \
-            DynamoDBAutocompleteView
+        from django_dynamo_admin.dynamodb_adapter.admin_autocomplete import (
+            DynamoDBAutocompleteView,
+        )
 
         # Mock search results
         mock_obj = MagicMock()
@@ -465,7 +483,7 @@ class TestPerformanceOptimizations(TestCase):
 
     def test_connection_pooling_integration(self):
         """Test connection pooling integration."""
-        from dynamodb_adapter.performance import get_connection_pool
+        from django_dynamo_admin.dynamodb_adapter.performance import get_connection_pool
 
         pool = get_connection_pool()
         stats = pool.get_stats()
@@ -475,7 +493,7 @@ class TestPerformanceOptimizations(TestCase):
 
     def test_query_caching_integration(self):
         """Test query caching integration."""
-        from dynamodb_adapter.performance import get_query_cache
+        from django_dynamo_admin.dynamodb_adapter.performance import get_query_cache
 
         cache_obj = get_query_cache()
         stats = cache_obj.get_stats()
@@ -487,7 +505,7 @@ class TestPerformanceOptimizations(TestCase):
     @override_settings(DYNAMODB_ENABLE_CACHE=True)
     def test_query_result_caching(self):
         """Test query result caching."""
-        from dynamodb_adapter.performance import get_query_cache
+        from django_dynamo_admin.dynamodb_adapter.performance import get_query_cache
 
         cache_obj = get_query_cache()
 
@@ -515,8 +533,9 @@ class TestManagementCommands(TestCase):
     @patch("dynamodb_adapter.performance.get_query_cache")
     def test_performance_command_execution(self, mock_cache, mock_pool):
         """Test performance command execution."""
-        from dynamodb_adapter.management.commands.dynamodb_performance import \
-            Command
+        from django_dynamo_admin.dynamodb_adapter.management.commands.dynamodb_performance import (
+            Command,
+        )
 
         # Mock performance data
         mock_pool.return_value.get_stats.return_value = {

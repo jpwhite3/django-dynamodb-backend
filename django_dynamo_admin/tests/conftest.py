@@ -12,7 +12,6 @@ from django.conf import settings
 from django.test import TransactionTestCase
 from moto import mock_aws
 
-
 # Pytest markers
 pytest_markers = {
     "unit": "Unit tests that don't require external dependencies",
@@ -33,16 +32,14 @@ def pytest_configure(config):
     for marker, description in pytest_markers.items():
         config.addinivalue_line("markers", f"{marker}: {description}")
 
-    # Configure Django settings
+    # Only configure Django if not already configured (via DJANGO_SETTINGS_MODULE)
     if not settings.configured:
         settings.configure(
             DEBUG=True,
             DATABASES={
                 "default": {
-                    "ENGINE": "django_dynamo_admin.database",
-                    "NAME": "test_dynamodb",
-                    "REGION": "us-east-1",
-                    "LOCAL_ENDPOINT": "http://localhost:9000",
+                    "ENGINE": "django.db.backends.sqlite3",
+                    "NAME": ":memory:",
                 }
             },
             INSTALLED_APPS=[
@@ -56,7 +53,7 @@ def pytest_configure(config):
             SECRET_KEY="test-secret-key",
             USE_TZ=True,
         )
-    django.setup()
+        django.setup()
 
 
 @pytest.fixture
@@ -71,7 +68,7 @@ def sample_question():
     """Fixture to provide a sample Question instance."""
     from datetime import datetime
 
-    from dynamodb_adapter.models import Question
+    from django_dynamo_admin.dynamodb_adapter.models import Question
 
     return Question(
         question_text="What is your favorite color?", pub_date=datetime.now()
@@ -81,7 +78,7 @@ def sample_question():
 @pytest.fixture
 def sample_choice():
     """Fixture to provide a sample Choice instance."""
-    from dynamodb_adapter.models import Choice
+    from django_dynamo_admin.dynamodb_adapter.models import Choice
 
     return Choice(question_id="123", choice_text="Blue", votes=5)
 
@@ -98,7 +95,7 @@ def mock_pynamodb_model():
 @pytest.fixture
 def database_wrapper():
     """Fixture to provide a DatabaseWrapper instance."""
-    from django_dynamo_admin.database.base import DatabaseWrapper
+    from django_dynamo_admin.django_dynamo_admin.database.base import DatabaseWrapper
 
     db_settings = {
         "ENGINE": "django_dynamo_admin.database",
@@ -113,7 +110,7 @@ def database_wrapper():
 @pytest.fixture
 def sql_compiler():
     """Fixture to provide a SQL compiler instance."""
-    from django_dynamo_admin.database.compiler import SQLCompiler
+    from django_dynamo_admin.django_dynamo_admin.database.compiler import SQLCompiler
 
     query = MagicMock()
     connection = MagicMock()
@@ -205,7 +202,7 @@ class DynamoDBAssertions:
     @staticmethod
     def assert_field_mapping_correct(django_field, expected_pynamodb_attr):
         """Assert that a Django field maps to the correct PynamoDB attribute."""
-        from dynamodb_adapter.fields import FieldMapper
+        from django_dynamo_admin.dynamodb_adapter.fields import FieldMapper
 
         actual_attr = FieldMapper.get_dynamodb_attribute(django_field)
         assert actual_attr == expected_pynamodb_attr

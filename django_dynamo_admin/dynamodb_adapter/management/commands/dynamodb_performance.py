@@ -5,8 +5,11 @@ Django management command for monitoring DynamoDB performance.
 import json
 
 from django.core.management.base import BaseCommand
-from dynamodb_adapter.performance import (get_connection_pool, get_query_cache,
-                                          performance_monitor)
+from dynamodb_adapter.performance import (
+    get_connection_pool,
+    get_query_cache,
+    performance_monitor,
+)
 
 
 class Command(BaseCommand):

@@ -430,7 +430,7 @@ class DynamoDBAdvancedPaginator(Paginator):
         """Return the total number of objects, or an estimated count for DynamoDB QuerySets."""
         if isinstance(self.object_list, (list, tuple)):
             return len(self.object_list)
-        
+
         # For DynamoDB QuerySets, return an estimate
         pagination_state = self.get_pagination_state()
         return pagination_state.total_pages_estimate * self.per_page
