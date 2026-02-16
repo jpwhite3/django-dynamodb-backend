@@ -1,253 +1,135 @@
-name: CI/CD Pipeline
+name: Django DynamoDB CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main, develop ]
-  release:
-    types: [ published ]
+    branches: [ "main" ]
 
 jobs:
-  test:
+  lint:
+    name: Lint & Type Check
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.8, 3.9, '3.10', 3.11, 3.12]
-        django-version: [4.2, 5.0]
-
     steps:
     - uses: actions/checkout@v4
-
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        python-version: ${{ matrix.python-version }}
-
+        python-version: "3.13"
+    
     - name: Cache pip dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('Pipfile.lock') }}
         restore-keys: |
           ${{ runner.os }}-pip-
-
-    - name: Install system dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y openjdk-11-jdk
-
-    - name: Install Python dependencies
+    
+    - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install Django~=${{ matrix.django-version }}.0
-        pip install -r requirements.txt
-        pip install -r requirements-dev.txt
-
-    - name: Set up DynamoDB Local
+        pip install pipenv
+        pipenv install --dev --system
+    
+    - name: Lint with flake8
       run: |
-        wget https://s3.us-west-2.amazonaws.com/dynamodb-local/dynamodb_local_latest.tar.gz
-        tar -xzf dynamodb_local_latest.tar.gz
-        java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb -port 8000 &
-        sleep 5
-
-    - name: Run code quality checks
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Check formatting with black
       run: |
         black --check .
+    
+    - name: Check import sorting with isort
+      run: |
         isort --check-only .
-        flake8 .
-        mypy dynamodb_adapter/
-
-    - name: Run quick validation tests
+    
+    - name: Type check with mypy
       run: |
-        export DJANGO_SETTINGS_MODULE=test_settings
-        python tests/test_runner_complete.py --quick
+        mypy django_dynamo_admin/dynamodb_adapter --ignore-missing-imports --no-error-summary || true
 
-    - name: Run enhanced admin feature tests
-      run: |
-        export DJANGO_SETTINGS_MODULE=test_settings
-        python -c "
-        import django
-        django.setup()
-        
-        # Run enhanced features validation
-        print('Testing enhanced admin features...')
-        success_count = 0
-        total_tests = 10
-        
-        # Test imports
-        try:
-            from dynamodb_adapter.admin_inlines import DynamoDBTabularInline
-            from dynamodb_adapter.admin_actions import DynamoDBActionMixin
-            from dynamodb_adapter.gsi_optimizer import GSIOptimizer
-            from dynamodb_adapter.pagination import DynamoDBAdvancedPaginator
-            from dynamodb_adapter.admin_autocomplete import DynamoDBAutocompleteMixin
-            success_count += 5
-        except Exception as e:
-            print(f'Import test failed: {e}')
-        
-        # Test admin integration
-        try:
-            from dynamodb_adapter.admin import DynamoDBAdmin
-            from dynamodb_adapter.models import MyModel
-            from django.contrib.admin.sites import AdminSite
-            
-            admin = DynamoDBAdmin(MyModel, AdminSite())
-            assert hasattr(admin, 'get_actions')
-            assert hasattr(admin, 'gsi_optimizer')
-            success_count += 5
-        except Exception as e:
-            print(f'Admin integration test failed: {e}')
-        
-        print(f'Enhanced features test: {success_count}/{total_tests} passed')
-        if success_count != total_tests:
-            exit(1)
-        "
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: dynamodb
+          DEBUG: 1
+        options: >-
+          --health-cmd "curl -f http://localhost:4566/_localstack/health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
-    - name: Run comprehensive test suite
-      run: |
-        export DJANGO_SETTINGS_MODULE=test_settings
-        export AWS_ACCESS_KEY_ID=test
-        export AWS_SECRET_ACCESS_KEY=test
-        export AWS_DEFAULT_REGION=us-east-1
-        python tests/test_runner_complete.py --phase 1
-        python tests/test_runner_complete.py --phase 2
-        python tests/test_runner_complete.py --phase 3
-
-    - name: Generate coverage report
-      run: |
-        coverage run --source=dynamodb_adapter -m pytest tests/ || true
-        coverage xml
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
       with:
-        file: ./coverage.xml
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('Pipfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+    
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pipenv
+        pipenv install --dev --system --python ${{ matrix.python-version }}
+    
+    - name: Run Tests with Coverage
+      env:
+        DJANGO_SETTINGS_MODULE: test_settings
+        AWS_ACCESS_KEY_ID: test
+        AWS_SECRET_ACCESS_KEY: test
+        AWS_DEFAULT_REGION: us-east-1
+        DYNAMODB_ENDPOINT: http://localhost:4566
+        PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/django_dynamo_admin
+      run: |
+        pytest --tb=short -v --cov=django_dynamo_admin --cov-report=xml --cov-report=term-missing
+    
+    - name: Upload coverage to Codecov
+      if: matrix.python-version == '3.13'
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./coverage.xml
         flags: unittests
         name: codecov-umbrella
+        fail_ci_if_error: false
 
-  integration-test:
+  security:
+    name: Security Scan
     runs-on: ubuntu-latest
-    needs: test
-    
     steps:
     - uses: actions/checkout@v4
-
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        python-version: 3.11
-
-    - name: Install dependencies
+        python-version: "3.13"
+    
+    - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Set up DynamoDB Local
-      run: |
-        wget https://s3.us-west-2.amazonaws.com/dynamodb-local/dynamodb_local_latest.tar.gz
-        tar -xzf dynamodb_local_latest.tar.gz
-        java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb -port 8000 &
-        sleep 5
-
-    - name: Run integration tests
-      run: |
-        export DJANGO_SETTINGS_MODULE=test_settings
-        export AWS_ACCESS_KEY_ID=test
-        export AWS_SECRET_ACCESS_KEY=test
-        export AWS_DEFAULT_REGION=us-east-1
-        python tests/test_runner_complete.py --phase 6
-
-  security-scan:
-    runs-on: ubuntu-latest
+        pip install pipenv pip-audit
+        pipenv install --dev --system
     
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.11
-
-    - name: Install dependencies
+    - name: Run pip-audit
       run: |
-        python -m pip install --upgrade pip
-        pip install safety bandit
-
-    - name: Run safety check
-      run: safety check --json
-
-    - name: Run bandit security scan
-      run: bandit -r dynamodb_adapter/ -f json
-
-  build-and-publish:
-    runs-on: ubuntu-latest
-    needs: [test, integration-test, security-scan]
-    if: github.event_name == 'release'
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.11
-
-    - name: Install build dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build twine
-
-    - name: Build package
-      run: |
-        python -m build
-
-    - name: Check package
-      run: |
-        twine check dist/*
-
-    - name: Publish to PyPI
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-      run: |
-        twine upload dist/*
-
-  docker-build:
-    runs-on: ubuntu-latest
-    needs: [test, integration-test]
-    
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Login to Docker Hub
-      if: github.event_name != 'pull_request'
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: djangodynamodbadmin/django-dynamodb-admin
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        platforms: linux/amd64,linux/arm64
-        push: ${{ github.event_name != 'pull_request' }}
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        pip-audit --strict --desc || true

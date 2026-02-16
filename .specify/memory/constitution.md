@@ -16,7 +16,7 @@ Sync Impact Report:
   - ✅ .specify/templates/commands/speckit.constitution.md
 - Follow-up TODOs: None
 -->
-# Django DynamoDB Admin Constitution
+# Django DynamoDB Backend Constitution
 
 ## Core Principles
 

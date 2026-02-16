@@ -134,12 +134,7 @@ class DynamoDBPaginator(Paginator):
     @property
     def count(self):
         """Return approximate count - DynamoDB doesn't provide exact counts efficiently."""
-        try:
-            if hasattr(self.object_list, "count"):
-                return self.object_list.count()
-            return len(self.object_list)
-        except Exception:
-            return 0
+        return len(self.object_list)
 
     def get_page(self, number):
         """Get a page with DynamoDB-specific handling."""

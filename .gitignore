@@ -75,6 +75,7 @@ coverage.xml
 *.cover
 *.py,cover
 .hypothesis/
+requirements/
 
 # Documentation
 docs/_build/

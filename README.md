@@ -1,4 +1,4 @@
-# Django DynamoDB Admin
+# Django DynamoDB Backend
 
 A comprehensive, production-ready Django application that provides **complete Django Admin integration** with Amazon DynamoDB. Features include a full ORM-like interface, migration system, and enhanced admin interface with DynamoDB-specific optimizations.
 
@@ -40,8 +40,8 @@ For a detailed overview of the project's goals, principles, and development conv
 
 ```bash
 # Clone and start the interactive demo
-git clone https://github.com/your-org/django-dynamo-admin.git
-cd django-dynamo-admin
+git clone https://github.com/jpwhite3/django-dynamodb-backend.git
+cd django-dynamodb-backend
 make demo
 
 # Access the admin: http://localhost:8001/admin/ (admin/admin123)
@@ -60,8 +60,8 @@ make demo
 #### Option 1: Interactive Demo (Recommended for First-Time Users)
 ```bash
 # Complete demo environment with sample data
-git clone https://github.com/your-org/django-dynamo-admin.git
-cd django-dynamo-admin
+git clone https://github.com/jpwhite3/django-dynamodb-backend.git
+cd django-dynamodb-backend
 make demo  # Or: docker-compose -f docker-compose.dev.yml up
 
 # Access interfaces:
@@ -508,8 +508,8 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 
 ```bash
 # Clone and setup development environment
-git clone https://github.com/your-org/django-dynamo-admin.git
-cd django-dynamo-admin
+git clone https://github.com/jpwhite3/django-dynamo-admin.git
+cd django-dynamodb-backend
 
 # Install development dependencies
 pip install -r requirements-dev.txt
@@ -526,7 +526,7 @@ python tests/test_runner_complete.py --quick
 
 ## 📈 Performance Benchmarks
 
-| Operation Type | Standard Django + PostgreSQL | Django DynamoDB Admin | Improvement |
+| Operation Type | Standard Django + PostgreSQL | Django DynamoDB Backend | Improvement |
 |----------------|-------------------------------|----------------------|-------------|
 | Simple Queries | 50ms avg | 15ms avg | **70% faster** |
 | Complex Filters | 200ms avg | 45ms avg | **77% faster** |
@@ -586,7 +586,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 **⭐ Star this project** if you find it useful! Contributions and feedback are always welcome.
 
 **🔗 Links:**
-- [GitHub Repository](https://github.com/your-org/django-dynamo-admin)
-- [Documentation](https://django-dynamo-admin.readthedocs.io)
-- [Issue Tracker](https://github.com/your-org/django-dynamo-admin/issues)
-- [Discussions](https://github.com/your-org/django-dynamo-admin/discussions)
+- [GitHub Repository](https://github.com/jpwhite3/django-dynamodb-backend)
+- [Documentation](https://django-dynamodb-backend.readthedocs.io)
+- [Issue Tracker](https://github.com/jpwhite3/django-dynamodb-backend/issues)
+- [Discussions](https://github.com/jpwhite3/django-dynamodb-backend/discussions)

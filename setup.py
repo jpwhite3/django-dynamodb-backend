@@ -1,8 +1,7 @@
 """
-Django DynamoDB Admin - Setup Configuration
+Django DynamoDB Backend - Setup Configuration
 
-A comprehensive Django application that provides complete Django Admin integration
-with Amazon DynamoDB, including enhanced admin features and DynamoDB-specific optimizations.
+A comprehensive Django database backend for Amazon DynamoDB.
 """
 
 import os
@@ -16,57 +15,63 @@ def read_file(filename):
         return f.read()
 
 
-# Read requirements
-def read_requirements(filename):
-    with open(filename, "r") as f:
-        return [
-            line.strip()
-            for line in f
-            if line.strip() and not line.startswith("#") and not line.startswith("-")
-        ]
-
-
 setup(
-    name="django-dynamodb-admin",
+    name="django-dynamodb-backend",
     version="1.0.0",
-    description="Complete Django Admin integration with Amazon DynamoDB",
+    description="A comprehensive Django database backend for Amazon DynamoDB.",
     long_description=read_file("README.md"),
     long_description_content_type="text/markdown",
-    author="Django DynamoDB Admin Contributors",
-    author_email="contributors@django-dynamodb-admin.org",
-    url="https://github.com/your-org/django-dynamo-admin",
+    author="Django DynamoDB Backend Contributors",
+    author_email="contributors@django-dynamodb-backend.org",
+    url="https://github.com/jpwhite3/django-dynamodb-backend",
     project_urls={
-        "Documentation": "https://django-dynamo-admin.readthedocs.io",
-        "Source": "https://github.com/your-org/django-dynamo-admin",
-        "Tracker": "https://github.com/your-org/django-dynamo-admin/issues",
-        "Discussions": "https://github.com/your-org/django-dynamo-admin/discussions",
+        "Documentation": "https://django-dynamodb-backend.readthedocs.io",
+        "Source": "https://github.com/jpwhite3/django-dynamodb-backend",
+        "Tracker": "https://github.com/jpwhite3/django-dynamodb-backend/issues",
+        "Discussions": "https://github.com/jpwhite3/django-dynamodb-backend/discussions",
     },
     license="MIT",
     packages=find_packages(exclude=["tests*"]),
     include_package_data=True,
     zip_safe=False,
-    python_requires=">=3.8",
-    install_requires=read_requirements("requirements.txt"),
+    python_requires=">=3.11",
+    install_requires=[
+        "django>=4.2",
+        "pynamodb>=6.0.0",
+        "boto3>=1.28.0",
+        "botocore>=1.31.0",
+    ],
     extras_require={
-        "dev": read_requirements("requirements-dev.txt"),
-        "redis": ["redis>=5.0.0"],
-        "monitoring": ["django-debug-toolbar>=4.2.0"],
+        "dev": [
+            "pytest>=8.0.0",
+            "pytest-django>=4.5.0",
+            "pytest-cov>=4.0.0",
+            "moto>=5.0.0",
+            "black>=24.0.0",
+            "flake8>=7.0.0",
+            "isort>=5.13.0",
+            "mypy>=1.0.0",
+            "pre-commit>=3.0.0",
+        ],
+        "redis": ["redis>=5.0.0", "django-redis>=5.4.0"],
+        "docs": ["sphinx>=7.0.0", "sphinx-rtd-theme>=2.0.0"],
     },
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Web Environment",
         "Framework :: Django",
         "Framework :: Django :: 4.2",
+        "Framework :: Django :: 5.0",
+        "Framework :: Django :: 5.1",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
         "Topic :: Database",
         "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
         "Topic :: Software Development :: Libraries :: Python Modules",
@@ -86,7 +91,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "django-dynamodb-admin=dynamodb_adapter.management.commands.dynamodb_performance:main",
+            "django-dynamodb-backend=dynamodb_adapter.management.commands.dynamodb_performance:main",
         ],
     },
     package_data={

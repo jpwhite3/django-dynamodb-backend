@@ -7,6 +7,7 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 from django.contrib.admin.sites import AdminSite
+from django.utils import timezone
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.http import HttpResponse
@@ -142,7 +143,7 @@ class TestModelAdminMethods(TestCase):
         """Test custom model methods in admin."""
         # Create a test question
         question = Question(
-            question_text="What is your favorite color?", pub_date=datetime.now()
+            question_text="What is your favorite color?", pub_date=timezone.now()
         )
 
         # Test the was_published_recently method
@@ -195,28 +196,25 @@ class TestDynamoDBAdminClass(TestCase):
         self.assertEqual(self.admin.model, MyModel)
         self.assertEqual(self.admin.admin_site, self.site)
 
-        # Check default list_display
-        self.assertIn("id", self.admin.list_display)
+        # Check default list_display - MyModel uses 'name' as primary key, not 'id'
         self.assertIn("name", self.admin.list_display)
 
-    def test_delete_all_action(self):
-        """Test custom delete_all action."""
+    def test_delete_selected_optimized_action(self):
+        """Test the delete_selected_optimized action."""
         request = self.factory.post("/admin/dynamodb_adapter/mymodel/")
         request.user = self.user
         request._messages = MagicMock()  # Mock messages framework
 
         # Create mock queryset
-        mock_obj1 = MagicMock()
-        mock_obj2 = MagicMock()
-        queryset = [mock_obj1, mock_obj2]
+        mock_queryset = MagicMock()
+        mock_queryset.delete.return_value = (2, {"dynamodb_adapter.MyModel": 2})
 
-        # Test the delete_all action
+        # Test the delete_selected_optimized action
         with patch.object(self.admin, "message_user") as mock_message:
-            self.admin.delete_all(request, queryset)
+            self.admin.delete_selected_optimized(request, mock_queryset)
 
-            # Check that delete was called on each object
-            mock_obj1.delete.assert_called_once()
-            mock_obj2.delete.assert_called_once()
+            # Check that delete was called on the queryset
+            mock_queryset.delete.assert_called_once()
 
             # Check that message was sent
             mock_message.assert_called_once()
@@ -265,8 +263,9 @@ class TestAdminIntegrationWithMockDynamoDB(TestCase):
 
     def test_admin_compatibility_features(self):
         """Test that admin-specific features work."""
-        # Test that ordering is disabled (DynamoDB limitation)
-        self.assertNotIn("ordering", dir(self.question_admin))
+        # Test that ordering is not explicitly set (DynamoDB limitation)
+        # Note: 'ordering' attribute exists on all ModelAdmin classes but defaults to None
+        self.assertIsNone(getattr(self.question_admin, 'ordering', None))
 
         # Test that date hierarchy is configured
         # Note: This might not work in DynamoDB but should be configurable
@@ -289,10 +288,20 @@ class TestAdminErrorHandling(TestCase):
             username="admin", email="admin@example.com", password="admin123"
         )
 
+    def _create_request_with_messages(self, path="/"):
+        """Create a request with proper session and messages support."""
+        from django.contrib.messages.storage.fallback import FallbackStorage
+        
+        request = self.factory.get(path)
+        request.user = self.user
+        setattr(request, 'session', {})
+        messages = FallbackStorage(request)
+        setattr(request, '_messages', messages)
+        return request
+
     def test_admin_handles_database_errors(self):
         """Test that admin gracefully handles database errors."""
-        request = self.factory.get("/admin/dynamodb_adapter/question/")
-        request.user = self.user
+        request = self._create_request_with_messages("/admin/dynamodb_adapter/question/")
 
         # Mock database error
         with patch.object(
