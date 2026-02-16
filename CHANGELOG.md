@@ -1,9 +1,28 @@
 # Changelog
 
-All notable changes to Django DynamoDB Admin will be documented in this file.
+All notable changes to Django DynamoDB Backend will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Changed
+- Updated Python version requirement to 3.11+ (removed 3.12 from CI due to compatibility issues)
+- Simplified project documentation
+- Updated package structure with proper `__init__.py` files
+- Fixed import paths for test compatibility
+
+### Fixed
+- CI/CD pipeline now passes all checks (linting, formatting, security scan)
+- Fixed black/isort formatting across all files
+- Fixed flake8 errors (missing imports)
+- Fixed app configuration for proper Django integration
+
+### Removed
+- Removed codecov integration
+- Removed internal planning and development documentation
+- Cleaned up unnecessary configuration files
 
 ## [1.0.0] - 2024-08-27
 
