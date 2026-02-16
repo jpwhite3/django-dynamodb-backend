@@ -5,11 +5,8 @@ Created on 2024-08-26 12:10
 """
 
 from django_dynamodb_backend.migrations_dynamo import (
-    CreateTable,
     DataMigration,
     DynamoDBMigration,
-    RunPython,
-    UpdateTableCapacity,
 )
 from django_dynamodb_backend.models import Question
 

@@ -22,7 +22,7 @@ from django_dynamodb_backend.migrations_dynamo import (
     DynamoDBMigrationState,
     UpdateTableCapacity,
 )
-from django_dynamodb_backend.models import MyModel, Question
+from django_dynamodb_backend.models import MyModel
 
 
 class TestDynamoDBMigrationIntegration(TestCase):
@@ -311,9 +311,11 @@ class TestManagementCommandsIntegration(TestCase):
     def test_dynamodb_showmigrations_command(self):
         """Test dynamodb_showmigrations management command."""
         try:
-            with patch(
-                "django_dynamodb_backend.management.commands.dynamodb_showmigrations.MigrationExecutor"
-            ) as mock_executor_class:
+            patch_target = (
+                "django_dynamodb_backend.management.commands."
+                "dynamodb_showmigrations.MigrationExecutor"
+            )
+            with patch(patch_target) as mock_executor_class:
                 mock_executor = MagicMock()
                 mock_executor.show_migrations.return_value = {
                     "test_app": [

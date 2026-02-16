@@ -5,13 +5,11 @@ Created on 2025-08-26 23:39
 """
 
 from django_dynamodb_backend.migrations_dynamo import (
-    CreateTable,
-    DataMigration,
     DynamoDBMigration,
-    RunPython,
-    UpdateTableCapacity,
 )
-from django_dynamodb_backend.models import MyModel  # Import your models here
+
+# Import your models here, e.g.:
+# from django_dynamodb_backend.models import MyModel
 
 
 class Migration(DynamoDBMigration):

@@ -3,13 +3,11 @@ Comprehensive unit tests for DynamoDB database backend.
 """
 
 import unittest
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
-import boto3
-from botocore.exceptions import ClientError
 from django.core.exceptions import ImproperlyConfigured
 from django.db import utils
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from moto import mock_aws
 
 from django_dynamodb_backend.db.base import (
@@ -23,13 +21,6 @@ from django_dynamodb_backend.db.base import (
     DynamoDBSchemaEditor,
     DynamoDBValidation,
     TableInfo,
-)
-from django_dynamodb_backend.db.compiler import (
-    SQLAggregateCompiler,
-    SQLCompiler,
-    SQLDeleteCompiler,
-    SQLInsertCompiler,
-    SQLUpdateCompiler,
 )
 
 
@@ -190,7 +181,7 @@ class TestDynamoDBCursor(TestCase):
 
     def test_execute(self):
         """Test query execution (placeholder)."""
-        result = self.cursor.execute("SELECT * FROM test", ["param1"])
+        self.cursor.execute("SELECT * FROM test", ["param1"])
 
         # Should store the query
         self.assertEqual(len(self.cursor.queries), 1)

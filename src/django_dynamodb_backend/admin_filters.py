@@ -6,11 +6,10 @@ and limitations.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.admin import SimpleListFilter
-from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -334,4 +333,3 @@ class DynamoDBFilterMixin:
 class DynamoDBAutoFilterAdmin(DynamoDBFilterMixin):
     """Admin class that automatically adds DynamoDB-optimized filters."""
 
-    pass

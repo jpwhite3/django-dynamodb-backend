@@ -8,12 +8,10 @@ from datetime import date, datetime, time
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from django.db import models
 from django.test import TestCase
 
 from django_dynamodb_backend.managers import (
-    DynamoDBManager,
     DynamoDBQuerySet,
 )
 from django_dynamodb_backend.models import MyModel

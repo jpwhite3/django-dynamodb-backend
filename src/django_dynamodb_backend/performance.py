@@ -9,7 +9,6 @@ import hashlib
 import json
 import logging
 import threading
-import time
 from queue import Empty, Queue
 
 from django.conf import settings
@@ -43,7 +42,8 @@ class ConnectionPool:
                     self.active_connections += 1
                     self.created_connections += 1
                     logger.debug(
-                        f"Created new connection #{self.created_connections}, active: {self.active_connections}"
+                        f"Created new connection #{self.created_connections}, "
+                        f"active: {self.active_connections}"
                     )
                     return connection
                 else:

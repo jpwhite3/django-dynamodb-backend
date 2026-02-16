@@ -10,23 +10,15 @@ import json
 import logging
 from datetime import datetime
 from decimal import Decimal
-from io import StringIO
 
-from django.contrib import admin, messages
+from django.contrib import messages
 from django.contrib.admin import helpers
-from django.contrib.admin.utils import model_ngettext
-from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import transaction
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.shortcuts import redirect, render
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template.response import TemplateResponse
-from django.urls import path, reverse
-from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import ngettext
 
-from .models import DynamoDBModel
 
 logger = logging.getLogger(__name__)
 
@@ -424,7 +416,8 @@ class DynamoDBActionMixin:
 
             messages.success(
                 request,
-                f"Successfully backed up {len(backup_data['items'])} items to s3://{bucket_name}/{filename}",
+                f"Successfully backed up {len(backup_data['items'])} items "
+                f"to s3://{bucket_name}/{filename}",
             )
 
         except ImportError:

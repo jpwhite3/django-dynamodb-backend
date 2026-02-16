@@ -6,9 +6,8 @@ This module handles the translation of Django ORM queries to DynamoDB operations
 
 import logging
 
-from django.core.exceptions import EmptyResultSet, FieldError
 from django.db.models.sql import compiler
-from django.db.models.sql.constants import MULTI, SINGLE
+from django.db.models.sql.constants import SINGLE
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +127,8 @@ class SQLCompiler(compiler.SQLCompiler):
         # Only sort keys can be ordered, and only in ascending or descending order
         if self.query.order_by:
             logger.warning(
-                "DynamoDB has limited ordering support. Consider using Global Secondary Indexes for complex ordering."
+                "DynamoDB has limited ordering support. "
+                "Consider using Global Secondary Indexes for complex ordering."
             )
 
     def _build_dynamodb_query(self):

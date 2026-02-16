@@ -5,7 +5,6 @@ Comprehensive unit tests for DynamoDB SQL compiler.
 import unittest
 from unittest.mock import MagicMock, patch
 
-from django.db.models.sql import Query
 from django.db.models.sql.constants import MULTI, SINGLE
 from django.test import TestCase
 

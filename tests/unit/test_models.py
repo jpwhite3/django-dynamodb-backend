@@ -4,17 +4,15 @@ Comprehensive unit tests for DynamoDB model integration.
 
 import unittest
 import uuid
-from datetime import date, datetime, time, timedelta
+from datetime import date, time, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 from django.core.exceptions import (
     ImproperlyConfigured,
-    MultipleObjectsReturned,
-    ObjectDoesNotExist,
 )
 from django.db import models
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from pynamodb.attributes import (
     BinaryAttribute,
     BooleanAttribute,
@@ -33,7 +31,7 @@ from django_dynamodb_backend.managers import (
     DynamoDBManager,
     DynamoDBQuerySet,
 )
-from django_dynamodb_backend.models import DynamoDBModel, DynamoDBModelMeta
+from django_dynamodb_backend.models import DynamoDBModel
 
 
 class TestFieldMapping(TestCase):

@@ -6,13 +6,11 @@ This module handles finding, loading, and executing DynamoDB migrations.
 
 import importlib
 import logging
-import os
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Any, Dict, List, Tuple
 
 from django.apps import apps
-from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 from .migrations_dynamo import DynamoDBMigration

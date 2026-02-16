@@ -8,10 +8,9 @@ optimization recommendations for DynamoDB queries.
 import logging
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from django.conf import settings
 from django.core.cache import cache
 from django.db import connection
 from django.utils import timezone
@@ -210,7 +209,7 @@ class GSIOptimizer:
             if first_order_field == gsi.range_key:
                 score += 2.0  # Good ordering match
                 # Check if ordering direction matches GSI sort order
-                is_descending = ordering[0].startswith("-")
+                ordering[0].startswith("-")
                 # In DynamoDB, you can specify ScanIndexForward=False for descending
                 score += 0.5
             elif first_order_field == gsi.hash_key:
@@ -305,10 +304,11 @@ class GSIOptimizer:
                     gsi, pattern.filters, pattern.ordering
                 )
                 if score > 5.0:  # Good match
+                    improvement = min(90, int(score * 10))
                     return OptimizationRecommendation(
                         type="use_gsi",
                         description=f"Use GSI '{gsi.name}' instead of table scan",
-                        potential_improvement=f"Could reduce response time by ~{min(90, int(score * 10))}%",
+                        potential_improvement=f"Could reduce response time by ~{improvement}%",
                         estimated_cost_savings=pattern.frequency
                         * 0.1,  # Rough estimate
                         complexity="low",
@@ -319,8 +319,10 @@ class GSIOptimizer:
         if pattern.frequency > 10:  # High frequency scan
             return OptimizationRecommendation(
                 type="create_gsi",
-                description=f"Create GSI for frequent scan pattern",
-                potential_improvement=f"Could eliminate {pattern.frequency} scan operations per period",
+                description="Create GSI for frequent scan pattern",
+                potential_improvement=(
+                    f"Could eliminate {pattern.frequency} scan operations per period"
+                ),
                 estimated_cost_savings=pattern.frequency * 0.2,
                 complexity="high",
             )
@@ -369,7 +371,9 @@ class GSIOptimizer:
                 recommendations.append(
                     OptimizationRecommendation(
                         type="create_gsi",
-                        description=f"Create GSI with hash key '{field_name}' for frequent filtering",
+                        description=(
+                            f"Create GSI with hash key '{field_name}' for frequent filtering"
+                        ),
                         potential_improvement=f"Optimize {frequency} queries per period",
                         estimated_cost_savings=frequency * 0.15,
                         complexity="high",
@@ -472,11 +476,9 @@ class GSIMonitoringMixin:
 
 def optimize_queryset_with_gsi(queryset, model_class):
     """Optimize a queryset using GSI analysis."""
-    optimizer = GSIOptimizer(model_class)
+    GSIOptimizer(model_class)
 
     # Extract query information
-    filters = {}
-    ordering = []
 
     # This would need more sophisticated query introspection
     # For now, return the queryset as-is

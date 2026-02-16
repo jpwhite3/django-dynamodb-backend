@@ -3,7 +3,6 @@ Django management command for creating DynamoDB migration files.
 """
 
 import logging
-import os
 from datetime import datetime
 from pathlib import Path
 
@@ -118,7 +117,9 @@ DynamoDB migration for {app_label}.
 
 Created on {timestamp}
 """
-from django_dynamodb_backend.migrations_dynamo import DynamoDBMigration, CreateTable, UpdateTableCapacity, RunPython, DataMigration
+from django_dynamodb_backend.migrations_dynamo import (
+    DynamoDBMigration, CreateTable, UpdateTableCapacity, RunPython, DataMigration
+)
 from django_dynamodb_backend.models import '''
 
         # Add model imports based on the operation

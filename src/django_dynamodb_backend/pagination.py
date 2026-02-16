@@ -9,13 +9,11 @@ import base64
 import json
 import logging
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlencode
 
 from django.core.cache import cache
 from django.core.paginator import EmptyPage, Page, PageNotAnInteger, Paginator
-from django.http import QueryDict
-from django.utils.functional import cached_property
 
 logger = logging.getLogger(__name__)
 
@@ -369,7 +367,7 @@ class DynamoDBAdvancedPaginator(Paginator):
         self, current_page: int, on_each_side: int = 2
     ) -> List[Dict[str, Any]]:
         """Get page range with navigation tokens."""
-        pagination_state = self.get_pagination_state()
+        self.get_pagination_state()
         estimated_total = self.get_estimated_total_pages()
 
         page_range = []

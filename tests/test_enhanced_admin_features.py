@@ -9,27 +9,18 @@ This test suite validates all the newly implemented Django Admin features:
 - Admin autocomplete for relationships
 """
 
-import base64
-import json
 import unittest
-from datetime import datetime, timedelta
-from decimal import Decimal
 from unittest.mock import MagicMock, Mock, patch
 
-from django.contrib import messages
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import User
-from django.core.cache import cache
-from django.core.exceptions import PermissionDenied, ValidationError
-from django.http import HttpRequest, QueryDict
-from django.test import Client, RequestFactory, TestCase
+from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 
 from django_dynamodb_backend.admin import DynamoDBAdmin
 from django_dynamodb_backend.admin_actions import DynamoDBActionMixin
 from django_dynamodb_backend.admin_autocomplete import (
     DynamoDBAutocompleteMixin,
-    DynamoDBAutocompleteView,
     DynamoDBAutocompleteWidget,
 )
 from django_dynamodb_backend.admin_inlines import (
@@ -41,11 +32,9 @@ from django_dynamodb_backend.admin_inlines import (
 from django_dynamodb_backend.gsi_optimizer import (
     GSIInfo,
     GSIOptimizer,
-    OptimizationRecommendation,
 )
 from django_dynamodb_backend.models import (
     Choice,
-    DynamoDBModel,
     MyModel,
     Question,
 )
@@ -463,7 +452,7 @@ class TestEnhancedAdminIntegration(TestCase):
 
         try:
             # This might fail due to template issues, but we're testing integration
-            response = self.admin.changelist_view(request)
+            self.admin.changelist_view(request)
             # If it doesn't raise an exception, integration is working
             self.assertTrue(True)
         except Exception as e:

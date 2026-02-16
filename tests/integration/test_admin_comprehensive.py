@@ -4,16 +4,12 @@ Comprehensive integration tests for Django Admin with DynamoDB backend.
 
 import unittest
 from datetime import datetime
-from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import User
 from django.contrib.messages.storage.fallback import FallbackStorage
-from django.http import HttpRequest
-from django.test import Client, RequestFactory, TestCase
-from django.urls import reverse
-from moto import mock_aws
+from django.test import RequestFactory, TestCase
 
 from django_dynamodb_backend.admin import (
     ChoiceAdmin,

@@ -10,9 +10,6 @@ from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
 from django.db import (
     DatabaseError,
-    IntegrityError,
-    OperationalError,
-    ProgrammingError,
     utils,
 )
 from django.db.backends.base.base import BaseDatabaseWrapper
@@ -103,15 +100,12 @@ class DynamoDBConnection:
 
     def commit(self):
         """Commit transaction (no-op for DynamoDB)."""
-        pass
 
     def rollback(self):
         """Rollback transaction (no-op for DynamoDB)."""
-        pass
 
     def close(self):
         """Close connection (no-op for DynamoDB)."""
-        pass
 
     def is_stale(self, max_age=3600):
         """Check if connection is stale."""
@@ -337,7 +331,6 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
     def init_connection_state(self):
         """Initialize connection state."""
-        pass
 
     def create_cursor(self, name=None):
         """Create a cursor for database operations."""
@@ -367,7 +360,6 @@ class DatabaseWrapper(BaseDatabaseWrapper):
 
     def _set_autocommit(self, autocommit):
         """Set autocommit mode (no-op for DynamoDB)."""
-        pass
 
     def _close(self):
         """Return connection to pool."""
@@ -420,7 +412,6 @@ class DynamoDBCursor:
 
     def close(self):
         """Close the cursor."""
-        pass
 
 
 class DynamoDBOperations(BaseDatabaseOperations):
@@ -561,7 +552,6 @@ class DynamoDBCreation(BaseDatabaseCreation):
     ):
         """Destroy test database."""
         # Clean up test tables
-        pass
 
 
 class DynamoDBIntrospection(BaseDatabaseIntrospection):
@@ -675,12 +665,9 @@ class DynamoDBSchemaEditor(BaseDatabaseSchemaEditor):
 
     def add_field(self, model, field):
         """Add a field to the model (DynamoDB is schemaless for non-key attributes)."""
-        pass
 
     def remove_field(self, model, field):
         """Remove a field from the model (DynamoDB is schemaless for non-key attributes)."""
-        pass
 
     def alter_field(self, model, old_field, new_field, strict=False):
         """Alter a field (limited support in DynamoDB)."""
-        pass

@@ -7,12 +7,11 @@ import uuid
 from datetime import date, datetime, time
 from decimal import Decimal
 
-from boto3.dynamodb.conditions import And, Attr, Key, Not, Or
+from boto3.dynamodb.conditions import Attr, Key, Not
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from django.db import models
 from django.db.models import Q
 from django.db.models.query import QuerySet
-from pynamodb.exceptions import DoesNotExist, QueryError
 
 logger = logging.getLogger(__name__)
 
@@ -512,7 +511,8 @@ class DynamoDBQuerySet(QuerySet):
             # Check if ordering is possible with current query
             if not clone._can_order_by_field(field_name):
                 logger.warning(
-                    f"DynamoDB cannot order by {field_name} without a GSI. Consider adding a Global Secondary Index or using scan."
+                    f"DynamoDB cannot order by {field_name} without a GSI. "
+                    "Consider adding a Global Secondary Index or using scan."
                 )
 
         return clone
@@ -1412,7 +1412,6 @@ class DynamoDBManager(models.Manager):
                 # as batch_update has limitations
                 for obj in batch:
                     # Only update specified fields
-                    update_data = {field: getattr(obj, field) for field in fields}
                     obj.save(using=self._db, update_fields=fields)
                     updated_count += 1
 

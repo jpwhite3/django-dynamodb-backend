@@ -7,15 +7,12 @@ handling table creation, modification, and schema evolution patterns.
 
 import hashlib
 import logging
-from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Type
+from typing import Type
 
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.utils import timezone
-from pynamodb.attributes import NumberAttribute, UnicodeAttribute, UTCDateTimeAttribute
+from pynamodb.attributes import UnicodeAttribute, UTCDateTimeAttribute
 from pynamodb.exceptions import DoesNotExist, TableError
 from pynamodb.models import Model as PynamoDBModel
 
@@ -120,7 +117,10 @@ class CreateTable(DynamoDBOperation):
             raise
 
     def describe(self) -> str:
-        return f"Create table for {self.model_name} (Read: {self.read_capacity}, Write: {self.write_capacity})"
+        return (
+            f"Create table for {self.model_name} "
+            f"(Read: {self.read_capacity}, Write: {self.write_capacity})"
+        )
 
 
 class UpdateTableCapacity(DynamoDBOperation):

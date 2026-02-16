@@ -3,13 +3,10 @@ Unit tests for DynamoDB migration system.
 """
 
 import unittest
-from datetime import datetime
-from pathlib import Path
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
-from django.utils import timezone
 
 from django_dynamodb_backend.migration_executor import (
     MigrationExecutor,
@@ -21,12 +18,11 @@ from django_dynamodb_backend.migrations_dynamo import (
     CreateTable,
     DataMigration,
     DynamoDBMigration,
-    DynamoDBMigrationState,
     DynamoDBOperation,
     RunPython,
     UpdateTableCapacity,
 )
-from django_dynamodb_backend.models import Choice, MyModel, Question
+from django_dynamodb_backend.models import MyModel
 
 
 class TestDynamoDBOperation(TestCase):

@@ -1,19 +1,17 @@
 import datetime
 import logging
-from typing import Any, Dict, Optional, Type
 
 from django.conf import settings
 from django.contrib import admin
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
-from django.db.models.query import QuerySet
 from django.utils import timezone
-from pynamodb.attributes import NumberAttribute, UnicodeAttribute
+from pynamodb.attributes import UnicodeAttribute
 from pynamodb.exceptions import DoesNotExist
 from pynamodb.models import Model as PynamoDBModel
 
 from .fields import DynamoDBFieldDescriptor, FieldMapper
-from .managers import DynamoDBManager, DynamoDBQuerySet
+from .managers import DynamoDBManager
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +36,7 @@ class DynamoDBModelMeta(type(models.Model)):
     @classmethod
     def _create_pynamodb_model(mcs, django_model):
         """Create a PynamoDB model class from Django model."""
-        table_name = django_model._meta.db_table
+        django_model._meta.db_table
 
         # Get region from settings
         region = "us-east-1"

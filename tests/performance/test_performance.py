@@ -6,16 +6,14 @@ import statistics
 import time
 import unittest
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-from django.test import TestCase, override_settings
-from moto import mock_aws
+from django.test import TestCase
 
 from django_dynamodb_backend.managers import (
-    DynamoDBManager,
     DynamoDBQuerySet,
 )
-from django_dynamodb_backend.models import Choice, MyModel, Question
+from django_dynamodb_backend.models import MyModel, Question
 
 
 class TestModelCreationPerformance(TestCase):
@@ -70,7 +68,7 @@ class TestModelCreationPerformance(TestCase):
         for i in range(num_iterations):
             start_time = time.time()
 
-            question = Question(
+            Question(
                 question_text=f"Test question {i}", pub_date=datetime.now()
             )
 
@@ -146,7 +144,7 @@ class TestQuerySetPerformance(TestCase):
         for field, lookup, value in lookups:
             start_time = time.time()
 
-            condition = self.queryset._convert_lookup(field, lookup, value)
+            self.queryset._convert_lookup(field, lookup, value)
 
             end_time = time.time()
             times.append(end_time - start_time)
@@ -244,7 +242,7 @@ class TestFieldMappingPerformance(TestCase):
 
             # Test conversion back from DynamoDB
             start_time = time.time()
-            back_value = FieldMapper.convert_value_from_dynamodb(dynamodb_value, field)
+            FieldMapper.convert_value_from_dynamodb(dynamodb_value, field)
             end_time = time.time()
             back_conversion_times.append(end_time - start_time)
 
@@ -293,7 +291,7 @@ class TestDatabaseBackendPerformance(TestCase):
 
         for _ in range(num_iterations):
             start_time = time.time()
-            params = self.db_wrapper.get_connection_params()
+            self.db_wrapper.get_connection_params()
             end_time = time.time()
             times.append(end_time - start_time)
 
@@ -378,7 +376,7 @@ class TestCompilerPerformance(TestCase):
 
         for _ in range(num_iterations):
             start_time = time.time()
-            query = self.compiler._build_dynamodb_query()
+            self.compiler._build_dynamodb_query()
             end_time = time.time()
             times.append(end_time - start_time)
 

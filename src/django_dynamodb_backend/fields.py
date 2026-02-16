@@ -3,7 +3,6 @@ DynamoDB field mappings and utilities for Django-DynamoDB integration.
 """
 
 import uuid
-from datetime import datetime
 from decimal import Decimal
 
 from django.db import models
@@ -11,8 +10,6 @@ from pynamodb.attributes import (
     BinaryAttribute,
     BooleanAttribute,
     JSONAttribute,
-    ListAttribute,
-    MapAttribute,
     NumberAttribute,
     UnicodeAttribute,
     UTCDateTimeAttribute,

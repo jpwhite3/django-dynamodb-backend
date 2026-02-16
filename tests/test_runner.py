@@ -6,11 +6,9 @@ import os
 import sys
 import time
 import unittest
-from io import StringIO
 
 import django
 from django.conf import settings
-from django.test.utils import get_runner
 
 # Add the project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

@@ -7,9 +7,7 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 from django.contrib.admin.sites import AdminSite
-from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
-from django.http import HttpResponse
 from django.test import RequestFactory, TestCase, override_settings
 from django.utils import timezone
 from moto import mock_aws
@@ -317,7 +315,7 @@ class TestAdminErrorHandling(TestCase):
             side_effect=Exception("DynamoDB connection error"),
         ):
             try:
-                response = self.question_admin.changelist_view(request)
+                self.question_admin.changelist_view(request)
                 # Should handle the error gracefully
             except Exception as e:
                 # Expected behavior - Django admin will handle this

@@ -6,21 +6,17 @@ with DynamoDB's query patterns and data structures.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import List
 
-from django.contrib import admin
 from django.contrib.admin.widgets import AutocompleteSelect, AutocompleteSelectMultiple
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-from django.db.models import Q
-from django.forms import Select, SelectMultiple
+from django.forms import Select
 from django.http import HttpRequest, JsonResponse
 from django.urls import path, reverse
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.views.generic import View
 
-from .models import DynamoDBModel
 
 logger = logging.getLogger(__name__)
 
@@ -43,9 +39,9 @@ class DynamoDBAutocompleteView(View):
         # Get search parameters
         term = request.GET.get("term", "")
         page = request.GET.get("page", 1)
-        app_label = request.GET.get("app_label", "")
-        model_name = request.GET.get("model_name", "")
-        field_name = request.GET.get("field_name", "")
+        request.GET.get("app_label", "")
+        request.GET.get("model_name", "")
+        request.GET.get("field_name", "")
 
         # Validate parameters
         if not term or len(term) < 2:
@@ -399,7 +395,7 @@ class DynamoDBReferenceFieldWidget(Select):
         if value:
             try:
                 # Try to load the referenced object for display
-                obj = self.reference_model.objects.get(pk=value)
+                self.reference_model.objects.get(pk=value)
                 return str(value)  # Return the ID value for the select
             except self.reference_model.DoesNotExist:
                 return value

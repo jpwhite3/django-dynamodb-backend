@@ -6,16 +6,12 @@ data patterns and relationship structures.
 """
 
 import logging
-from decimal import Decimal
 
-from django.contrib import admin
 from django.contrib.admin.options import InlineModelAdmin
 from django.contrib.contenttypes.admin import GenericInlineModelAdmin
 from django.core.exceptions import ValidationError
-from django.db import transaction
-from django.forms import BaseInlineFormSet, modelformset_factory
+from django.forms import BaseInlineFormSet
 from django.forms.models import inlineformset_factory
-from django.utils.functional import cached_property
 
 from .admin_forms import DynamoDBModelForm
 from .models import DynamoDBModel
@@ -169,9 +165,9 @@ class DynamoDBInlineModelAdmin(InlineModelAdmin):
     def get_formset(self, request, obj=None, **kwargs):
         """Get the formset with DynamoDB optimizations."""
         if "fields" in kwargs:
-            fields = kwargs.pop("fields")
+            kwargs.pop("fields")
         else:
-            fields = None
+            pass
 
         # Set default values
         kwargs.setdefault("formset", self.formset)
