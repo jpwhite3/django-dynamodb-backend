@@ -105,15 +105,6 @@ jobs:
         # Skip tests for now until test infrastructure is stabilized
         echo "Tests temporarily skipped - see PR for details"
         exit 0
-    
-    - name: Upload coverage to Codecov
-      if: matrix.python-version == '3.13'
-      uses: codecov/codecov-action@v4
-      with:
-        files: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
 
   security:
     name: Security Scan
