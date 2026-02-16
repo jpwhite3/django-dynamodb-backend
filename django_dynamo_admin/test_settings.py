@@ -1,8 +1,18 @@
 """
-Test settings that disable problematic Django systems for our DynamoDB tests.
+Test settings for Django DynamoDB tests.
+Self-contained - does not import from other settings.
 """
 
-from django_dynamo_admin.settings import *
+import os
+from pathlib import Path
+
+# Build paths inside the project
+BASE_DIR = Path(__file__).resolve().parent
+
+# Security settings
+SECRET_KEY = "test-secret-key-for-ci-only"
+DEBUG = True
+ALLOWED_HOSTS = ["*"]
 
 # Use SQLite for Django's built-in models (User, ContentType, etc.)
 DATABASES = {
@@ -17,7 +27,7 @@ MIGRATION_MODULES = {
     "dynamodb_adapter": None,
 }
 
-# Disable problematic Django apps for testing
+# Installed apps for testing
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -25,17 +35,45 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "dynamodb_adapter",
-    "tests",
+    "django_dynamo_admin.dynamodb_adapter",
+]
+
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+]
+
+ROOT_URLCONF = "django_dynamo_admin.django_dynamo_admin.urls"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
 ]
 
 # Test-specific settings
 USE_TZ = True
 TIME_ZONE = "UTC"
+LANGUAGE_CODE = "en-us"
+USE_I18N = True
+STATIC_URL = "static/"
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # DynamoDB settings for testing - use environment variable or default to localstack
-import os
-
 DYNAMODB_REGION = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
 DYNAMODB_LOCAL_ENDPOINT = os.environ.get("DYNAMODB_ENDPOINT", "http://localhost:4566")
 

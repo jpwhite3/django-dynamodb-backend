@@ -12,16 +12,17 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.test import TestCase
 from django.utils import timezone
-from dynamodb_adapter.migration_executor import MigrationExecutor
-from dynamodb_adapter.migrations_dynamo import (
+from moto import mock_aws
+
+from django_dynamo_admin.dynamodb_adapter.migration_executor import MigrationExecutor
+from django_dynamo_admin.dynamodb_adapter.migrations_dynamo import (
     CreateTable,
     DataMigration,
     DynamoDBMigration,
     DynamoDBMigrationState,
     UpdateTableCapacity,
 )
-from dynamodb_adapter.models import MyModel, Question
-from moto import mock_aws
+from django_dynamo_admin.dynamodb_adapter.models import MyModel, Question
 
 
 class TestDynamoDBMigrationIntegration(TestCase):
@@ -130,7 +131,10 @@ class TestDynamoDBMigrationIntegration(TestCase):
 
     def test_migration_dependency_resolution(self):
         """Test migration dependency resolution."""
-        from dynamodb_adapter.migration_executor import MigrationGraph, MigrationNode
+        from django_dynamo_admin.dynamodb_adapter.migration_executor import (
+            MigrationGraph,
+            MigrationNode,
+        )
 
         # Create test migrations with dependencies
         migration1 = MagicMock()
@@ -165,7 +169,9 @@ class TestDynamoDBMigrationIntegration(TestCase):
     @patch("dynamodb_adapter.migration_executor.importlib.import_module")
     def test_migration_loader_integration(self, mock_import):
         """Test migration loader with mock modules."""
-        from dynamodb_adapter.migration_executor import MigrationLoader
+        from django_dynamo_admin.dynamodb_adapter.migration_executor import (
+            MigrationLoader,
+        )
 
         # Mock migration module
         mock_migration_class = type(

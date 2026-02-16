@@ -1,8 +1,9 @@
 import os
 import sys
+
 import django
-from django.conf import settings
 import pytest
+from django.conf import settings
 
 
 def main():

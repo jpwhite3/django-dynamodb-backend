@@ -9,7 +9,7 @@ from django.db.models.sql import Query
 from django.db.models.sql.constants import MULTI, SINGLE
 from django.test import TestCase
 
-from django_dynamo_admin.database.compiler import (
+from django_dynamo_admin.django_dynamo_admin.database.compiler import (
     SQLAggregateCompiler,
     SQLCompiler,
     SQLDeleteCompiler,

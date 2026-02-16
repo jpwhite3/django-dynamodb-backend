@@ -7,14 +7,19 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 from django.contrib.admin.sites import AdminSite
-from django.utils import timezone
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.test import RequestFactory, TestCase, override_settings
-from dynamodb_adapter.admin import ChoiceAdmin, DynamoDBAdmin, QuestionAdmin
-from dynamodb_adapter.models import Choice, MyModel, Question
+from django.utils import timezone
 from moto import mock_aws
+
+from django_dynamo_admin.dynamodb_adapter.admin import (
+    ChoiceAdmin,
+    DynamoDBAdmin,
+    QuestionAdmin,
+)
+from django_dynamo_admin.dynamodb_adapter.models import Choice, MyModel, Question
 
 
 @override_settings(

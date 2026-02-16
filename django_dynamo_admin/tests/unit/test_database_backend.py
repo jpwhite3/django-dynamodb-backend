@@ -12,7 +12,7 @@ from django.db import utils
 from django.test import TestCase, override_settings
 from moto import mock_aws
 
-from django_dynamo_admin.database.base import (
+from django_dynamo_admin.django_dynamo_admin.database.base import (
     DatabaseWrapper,
     DynamoDBClient,
     DynamoDBCreation,
@@ -24,7 +24,7 @@ from django_dynamo_admin.database.base import (
     DynamoDBValidation,
     TableInfo,
 )
-from django_dynamo_admin.database.compiler import (
+from django_dynamo_admin.django_dynamo_admin.database.compiler import (
     SQLAggregateCompiler,
     SQLCompiler,
     SQLDeleteCompiler,
@@ -99,7 +99,9 @@ class TestDatabaseWrapper(TestCase):
 
         connection = self.db_wrapper.get_new_connection(conn_params)
 
-        from django_dynamo_admin.database.base import DynamoDBConnection
+        from django_dynamo_admin.django_dynamo_admin.database.base import (
+            DynamoDBConnection,
+        )
 
         self.assertIsInstance(connection, DynamoDBConnection)
         self.assertIsNotNone(connection.resource)

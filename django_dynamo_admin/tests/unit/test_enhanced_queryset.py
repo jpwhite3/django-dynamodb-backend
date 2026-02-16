@@ -11,8 +11,12 @@ from unittest.mock import MagicMock, patch
 from django.core.exceptions import MultipleObjectsReturned, ObjectDoesNotExist
 from django.db import models
 from django.test import TestCase
-from dynamodb_adapter.managers import DynamoDBManager, DynamoDBQuerySet
-from dynamodb_adapter.models import MyModel
+
+from django_dynamo_admin.dynamodb_adapter.managers import (
+    DynamoDBManager,
+    DynamoDBQuerySet,
+)
+from django_dynamo_admin.dynamodb_adapter.models import MyModel
 
 
 class EnhancedTestModel(MyModel):
