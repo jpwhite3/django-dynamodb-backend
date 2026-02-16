@@ -1,5 +1,7 @@
 # E-commerce Admin Configuration - Advanced DynamoDB Features
 
+from decimal import Decimal
+
 from django.contrib import admin
 from django.utils.html import format_html
 from dynamodb_adapter.admin import DynamoDBAdmin
