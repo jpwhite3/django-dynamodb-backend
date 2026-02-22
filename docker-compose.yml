@@ -2,6 +2,7 @@
 
 services:
   # Main Django application
+  # Runs with DynamoDB-only backend (no Redis or SQL required)
   web:
     build:
       context: .
@@ -15,17 +16,52 @@ services:
       - AWS_SECRET_ACCESS_KEY=test
       - AWS_DEFAULT_REGION=us-east-1
       - DYNAMODB_ENDPOINT=http://localstack:4566
+      - DYNAMODB_HOST=localstack
+      - DYNAMODB_PORT=4566
       - PYTHONPATH=/app:/app/src
     volumes:
       - .:/app
       - django_media:/app/media
       - django_static:/app/staticfiles
     depends_on:
-      - localstack
-      - redis
+      localstack:
+        condition: service_healthy
+      # Note: No Redis dependency - uses DynamoDB for sessions!
     networks:
       - django-network
     command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+  # Demo service - runs init script then starts server
+  # This runs 100% on DynamoDB - no Redis or SQL database required!
+  demo:
+    build:
+      context: .
+      target: development
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=examples.demo_project.settings
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+      - DYNAMODB_ENDPOINT=http://localstack:4566
+      - DYNAMODB_HOST=localstack
+      - DYNAMODB_PORT=4566
+      - PYTHONPATH=/app:/app/src
+    volumes:
+      - .:/app
+      - django_media:/app/media
+      - django_static:/app/staticfiles
+    depends_on:
+      localstack:
+        condition: service_healthy
+      # Note: No Redis dependency - sessions and auth use DynamoDB!
+    networks:
+      - django-network
+    command: ["/app/scripts/init-demo.sh"]
+    profiles:
+      - demo
 
   # LocalStack for local AWS services
   localstack:
@@ -42,8 +78,15 @@ services:
       - localstack_data:/tmp/localstack
     networks:
       - django-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
-  # Redis for caching (optional)
+  # Redis for caching (optional - not required for demo)
+  # The demo now uses DynamoDB for sessions and local memory cache
   redis:
     image: redis:7-alpine
     container_name: django-redis
@@ -59,6 +102,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    profiles:
+      - with-redis  # Only start Redis when explicitly requested
 
   # Test runner service
   test:

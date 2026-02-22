@@ -1,26 +1,82 @@
 # Django DynamoDB Backend
 
-A Django database backend and admin integration for Amazon DynamoDB. Provides Django Admin compatibility with DynamoDB-specific optimizations.
+A Django database backend and admin integration for Amazon DynamoDB. Run Django **100% on DynamoDB** — no PostgreSQL, MySQL, or SQLite required.
 
 [![CI](https://github.com/jpwhite3/django-dynamodb-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/jpwhite3/django-dynamodb-backend/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Django 5.2+](https://img.shields.io/badge/django-5.2+-green.svg)](https://www.djangoproject.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph Django["Django Application"]
+        VIEWS[Views] --> MODELS[DynamoDBModel]
+        ADMIN[Admin] --> MODELS
+        AUTH[Auth] --> USERS[DynamoUser]
+        SESS[Sessions] --> SESSBE[SessionStore]
+    end
+    
+    subgraph DDB["DynamoDB"]
+        MODELS --> T1[(App Tables)]
+        USERS --> T2[(django_users)]
+        SESSBE --> T3[(django_sessions)]
+    end
+    
+    style T1 fill:#4053d6,color:#fff
+    style T2 fill:#4053d6,color:#fff
+    style T3 fill:#4053d6,color:#fff
+```
+
 ## Features
 
-- **Django Admin Integration**: Full admin interface support with DynamoDB
-- **Custom Database Backend**: Django-compatible database backend for DynamoDB
-- **Migration System**: DynamoDB-specific migration framework
-- **Query Optimization**: Intelligent GSI selection and query optimization
-- **Batch Operations**: Automatic chunking for DynamoDB batch limits
+- **🚀 100% DynamoDB**: Run Django without any relational database — sessions, users, and admin all on DynamoDB
+- **🔐 DynamoDB Authentication**: Full user auth system with username/email GSIs, password hashing, and permissions
+- **🍪 DynamoDB Sessions**: Session backend with automatic TTL-based expiration
+- **⚡ Django Admin**: Complete admin interface support with DynamoDB optimizations
+- **📦 Django ORM Compatible**: Familiar QuerySet API, Q objects, aggregations, and more
+- **🔄 Migration System**: DynamoDB-specific table and index management
+- **💰 Cost Optimized**: Pay-per-request billing, fits within AWS free tier for development
+- **☁️ Serverless Ready**: Perfect for AWS Lambda deployments
 
 ## Requirements
 
 - Python 3.11+
 - Django 5.2+
-- boto3
-- pynamodb
+- Docker (for local development)
+- boto3, pynamodb
+
+## Quick Start
+
+### 🎯 Try the Demo (30 seconds)
+
+The fastest way to explore — runs entirely on DynamoDB with no other databases:
+
+```bash
+git clone https://github.com/jpwhite3/django-dynamodb-backend.git
+cd django-dynamodb-backend
+make demo
+```
+
+This starts:
+- **LocalStack** (local DynamoDB emulator)
+- **Django Admin** at http://localhost:8000/admin/
+- **Sample data** (blog posts, products, orders)
+
+**Login:** `admin` / `admin123`
+
+> 🎉 **No Redis, PostgreSQL, or SQLite** — everything runs on DynamoDB!
+
+Demo commands:
+```bash
+make demo        # Start demo
+make demo-stop   # Stop demo
+make demo-reset  # Reset and restart
+make demo-logs   # View logs
+```
+
+---
 
 ## Installation
 
@@ -29,16 +85,84 @@ A Django database backend and admin integration for Amazon DynamoDB. Provides Dj
 git clone https://github.com/jpwhite3/django-dynamodb-backend.git
 cd django-dynamodb-backend
 
-# Install with pipenv
-pipenv install
-
-# Or install with pip
+# Install with pip
 pip install -e .
+
+# Or with pipenv
+pipenv install
 ```
 
-## Quick Start
+---
 
-### 1. Configure Django Settings
+## Configuration
+
+### Option 1: DynamoDB-Only Mode (Recommended)
+
+Run Django entirely on DynamoDB — ideal for serverless deployments:
+
+```python
+# settings.py
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    # DynamoDB backend
+    'django_dynamodb_backend',
+    'django_dynamodb_backend.contrib.auth_dynamo',  # DynamoDB users
+]
+
+# Database
+DATABASES = {
+    'default': {
+        'ENGINE': 'django_dynamodb_backend.db',
+        'NAME': 'my_app',
+        'OPTIONS': {
+            'region_name': 'us-east-1',
+            'endpoint_url': 'http://localhost:4566',  # LocalStack for dev
+            'aws_access_key_id': 'test',
+            'aws_secret_access_key': 'test',
+        },
+    }
+}
+
+# Sessions — stored in DynamoDB with TTL
+SESSION_ENGINE = 'django_dynamodb_backend.sessions'
+DYNAMODB_SESSION_TABLE_NAME = 'django_sessions'
+
+# Authentication — DynamoDB users with GSIs
+AUTH_USER_MODEL = 'auth_dynamo.DynamoUser'
+DYNAMODB_USER_TABLE_NAME = 'django_users'
+AUTHENTICATION_BACKENDS = [
+    'django_dynamodb_backend.contrib.auth_dynamo.backends.DynamoAuthBackend',
+]
+
+# Cache (local memory — or use ElastiCache in production)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+```
+
+### Create Tables
+
+```bash
+# Create sessions table (with TTL)
+python manage.py dynamodb_create_session_table
+
+# Create users table (with GSIs) and admin user
+python manage.py dynamodb_create_user_table --create-admin
+
+# Create your app's tables
+python manage.py dynamodb_migrate
+```
+
+### Option 2: Hybrid Mode
+
+Use DynamoDB for your models while keeping PostgreSQL/SQLite for Django's built-in apps:
 
 ```python
 # settings.py
@@ -58,128 +182,144 @@ DATABASES = {
         'NAME': 'my_app',
         'OPTIONS': {
             'region_name': 'us-east-1',
-            'endpoint_url': 'http://localhost:4566',  # For local development
         },
     }
 }
 ```
 
-### 2. Configure AWS Credentials
+---
 
-```bash
-# Using environment variables
-export AWS_ACCESS_KEY_ID="your-access-key"
-export AWS_SECRET_ACCESS_KEY="your-secret-key"
-export AWS_DEFAULT_REGION="us-east-1"
-
-# Or use AWS CLI
-aws configure
-```
-
-### 3. Define Models
+## Define Models
 
 ```python
-# models.py
+from django.db import models
 from django_dynamodb_backend.models import DynamoDBModel
-from django_dynamodb_backend.fields import CharField, TextField, BooleanField
 
 class BlogPost(DynamoDBModel):
-    slug = CharField(max_length=100, primary_key=True)
-    title = CharField(max_length=200)
-    content = TextField()
-    author = CharField(max_length=100)
-    published = BooleanField(default=False)
+    id = models.CharField(primary_key=True, max_length=36)
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    author = models.CharField(max_length=100)
+    published = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        table_name = 'blog_posts'
+        db_table = 'blog_posts'
+    
+    def __str__(self):
+        return self.title
 ```
 
-### 4. Create Admin Interface
+## Admin Interface
 
 ```python
-# admin.py
 from django.contrib import admin
 from django_dynamodb_backend.admin import DynamoDBAdmin
 from .models import BlogPost
 
 @admin.register(BlogPost)
 class BlogPostAdmin(DynamoDBAdmin):
-    list_display = ['title', 'author', 'published']
-    list_filter = ['published']
-    search_fields = ['title', 'author']
+    list_display = ['title', 'author', 'published', 'created_at']
+    list_filter = ['published', 'author']
+    search_fields = ['title', 'content']
 ```
 
-## Development
+---
 
-### Setup Development Environment
+## Management Commands
 
-```bash
-# Clone and setup
-git clone https://github.com/jpwhite3/django-dynamodb-backend.git
-cd django-dynamodb-backend
+| Command | Description |
+|---------|-------------|
+| `dynamodb_create_session_table` | Create sessions table with TTL |
+| `dynamodb_create_user_table` | Create users table with GSIs |
+| `dynamodb_create_user_table --create-admin` | Also create admin user |
+| `dynamodb_migrate` | Apply DynamoDB migrations |
+| `dynamodb_makemigrations` | Create new migrations |
+| `dynamodb_showmigrations` | Show migration status |
+| `dynamodb_rollback` | Rollback migrations |
 
-# Install dependencies
-pipenv install --dev
+---
 
-# Run linting
-pipenv run flake8 .
-pipenv run black --check .
-pipenv run isort --check-only .
+## DynamoDB Table Schemas
 
-# Run tests
-pipenv run pytest tests/
-```
+### Sessions Table (`django_sessions`)
+- **Partition Key**: `session_key` (String)
+- **TTL Attribute**: `expire_date` (Unix timestamp)
+- **Billing**: Pay-per-request
 
-### Using Docker for Local DynamoDB
+### Users Table (`django_users`)
+- **Partition Key**: `id` (String, UUID)
+- **GSI `username-index`**: Lookup by username
+- **GSI `email-index`**: Lookup by email
+- **Billing**: Pay-per-request
 
-```bash
-# Start local DynamoDB with docker-compose
-docker-compose up -d
-
-# DynamoDB Local will be available at http://localhost:4566
-```
+---
 
 ## Project Structure
 
 ```
 django-dynamodb-backend/
-├── src/
-│   └── django_dynamodb_backend/   # Pip-installable package
-│       ├── admin.py               # Django Admin integration
-│       ├── models.py              # DynamoDB model base classes
-│       ├── fields.py              # Field type mapping
-│       ├── managers.py            # QuerySet implementation
-│       ├── db/                    # Custom database backend
-│       │   ├── base.py
-│       │   └── compiler.py
-│       └── management/commands/   # Management commands
-├── tests/                         # Test suite
-├── examples/                      # Example code and demo project
-├── docs/                          # Documentation
-└── pyproject.toml                 # Package configuration
+├── src/django_dynamodb_backend/
+│   ├── admin.py                 # Django Admin integration
+│   ├── models.py                # DynamoDB model base class
+│   ├── managers.py              # QuerySet implementation
+│   ├── sessions.py              # DynamoDB session backend
+│   ├── contrib/
+│   │   └── auth_dynamo/         # DynamoDB authentication
+│   │       ├── models.py        # DynamoUser model
+│   │       ├── managers.py      # User manager
+│   │       ├── backends.py      # Auth backend
+│   │       ├── admin.py         # User admin
+│   │       └── forms.py         # User forms
+│   ├── db/                      # Database backend
+│   └── management/commands/     # Management commands
+├── examples/demo_project/       # Demo application
+├── tests/                       # Test suite
+└── docs/                        # Documentation
+```
+
+---
+
+## Documentation
+
+📚 **[Documentation Index](docs/INDEX.md)** — Find the right doc for your needs
+
+| Document | Description |
+|----------|-------------|
+| [Migration Tutorial](docs/MIGRATION_TUTORIAL.md) | Step-by-step guide to migrate existing Django projects |
+| [Django Compatibility](docs/DJANGO_COMPATIBILITY.md) | Supported ORM features and limitations |
+| [API Reference](docs/API_REFERENCE.md) | Complete API documentation |
+| [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) | Production & serverless deployment |
+| [Feature Walkthrough](docs/FEATURE_WALKTHROUGH.md) | Detailed feature guide with demos |
+
+---
+
+## Development
+
+```bash
+# Setup
+git clone https://github.com/jpwhite3/django-dynamodb-backend.git
+cd django-dynamodb-backend
+pipenv install --dev
+
+# Lint
+pipenv run black .
+pipenv run isort .
+pipenv run flake8 .
+
+# Test
+pipenv run pytest tests/
 ```
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-```bash
-# Development workflow
-git checkout -b feature/your-feature
-# Make changes
-pipenv run black .
-pipenv run isort .
-pipenv run flake8 .
-git commit -m "feat: your feature description"
-git push origin feature/your-feature
-# Create pull request
-```
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License — see [LICENSE](LICENSE).
 
 ## Links
 
-- [GitHub Repository](https://github.com/jpwhite3/django-dynamodb-backend)
-- [Issue Tracker](https://github.com/jpwhite3/django-dynamodb-backend/issues)
+- [GitHub](https://github.com/jpwhite3/django-dynamodb-backend)
+- [Issues](https://github.com/jpwhite3/django-dynamodb-backend/issues)

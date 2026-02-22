@@ -2,9 +2,48 @@
 
 This guide covers deploying Django with DynamoDB in various environments, from development to production.
 
+## Deployment Architecture Overview
+
+```mermaid
+flowchart TB
+    subgraph Development
+        DEV["Local Development"] --> LS[(LocalStack<br/>DynamoDB)]
+    end
+    
+    subgraph Production Options
+        subgraph Serverless
+            LAMBDA[AWS Lambda] --> DDB1[(DynamoDB)]
+            APIGW[API Gateway] --> LAMBDA
+        end
+        
+        subgraph Container
+            ECS[ECS/Fargate] --> DDB2[(DynamoDB)]
+            ALB[Load Balancer] --> ECS
+        end
+        
+        subgraph Traditional
+            EC2[EC2 Instance] --> DDB3[(DynamoDB)]
+            NLB[Load Balancer] --> EC2
+        end
+    end
+    
+    DEV -.->|Deploy| Serverless
+    DEV -.->|Deploy| Container
+    DEV -.->|Deploy| Traditional
+    
+    style LAMBDA fill:#ff9900,color:#fff
+    style ECS fill:#ff9900,color:#fff
+    style EC2 fill:#ff9900,color:#fff
+    style DDB1 fill:#4053d6,color:#fff
+    style DDB2 fill:#4053d6,color:#fff
+    style DDB3 fill:#4053d6,color:#fff
+```
+
 ## Table of Contents
 
+- [Quick Start (DynamoDB-Only)](#quick-start-dynamodb-only)
 - [Development Setup](#development-setup)
+- [Serverless Deployment (AWS Lambda)](#serverless-deployment-aws-lambda)
 - [AWS Production Deployment](#aws-production-deployment)
 - [Docker Deployment](#docker-deployment)
 - [Performance Optimization](#performance-optimization)
@@ -14,28 +53,48 @@ This guide covers deploying Django with DynamoDB in various environments, from d
 
 ---
 
+## Quick Start (DynamoDB-Only)
+
+The fastest way to get started is using **DynamoDB-only mode**, which runs Django entirely on DynamoDB without any relational database.
+
+```bash
+# Clone and setup
+git clone https://github.com/your-org/django-dynamodb-backend.git
+cd django-dynamodb-backend
+
+# Start the demo (DynamoDB-only)
+make demo
+
+# Visit http://localhost:8001/admin/ (admin/admin123)
+```
+
+This starts:
+- Django with DynamoDB sessions and authentication
+- LocalStack providing DynamoDB
+- No PostgreSQL, Redis, or SQLite required!
+
+See [Django Compatibility Guide](DJANGO_COMPATIBILITY.md#dynamodb-only-deployment) for detailed configuration.
+
+---
+
 ## Development Setup
 
 ### Prerequisites
 
-- Python 3.8+
-- Java 8+ (for DynamoDB Local)
-- AWS CLI (optional but recommended)
+- Python 3.11+
+- Docker and Docker Compose (recommended)
+- AWS CLI (optional)
 
 ### 1. DynamoDB Local Setup
 
-#### Option A: Direct Installation
+#### Option A: Docker Compose (Recommended)
 
 ```bash
-# Download DynamoDB Local
-wget https://s3.us-west-2.amazonaws.com/dynamodb-local/dynamodb_local_latest.tar.gz
-tar -xzf dynamodb_local_latest.tar.gz
-
-# Start DynamoDB Local
-java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb -dbPath ./data
+# Start LocalStack with DynamoDB
+docker compose up -d localstack
 ```
 
-#### Option B: Docker
+#### Option B: Standalone Docker
 
 ```bash
 # Run DynamoDB Local in Docker
@@ -43,7 +102,7 @@ docker run -p 8000:8000 -v "$PWD/dynamodb-data":/home/dynamodblocal/data \
   amazon/dynamodb-local -jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data
 ```
 
-### 2. Django Configuration
+### 2. Django Configuration (DynamoDB-Only)
 
 Create `settings/development.py`:
 
@@ -53,14 +112,33 @@ from .base import *
 DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django_dynamo_admin.database',
-        'NAME': 'dev_database',
-        'REGION': 'us-east-1',
-        'LOCAL_ENDPOINT': 'http://localhost:8000',
-    }
-}
+# DynamoDB Configuration
+DYNAMODB_ENDPOINT_URL = 'http://localhost:8000'
+DYNAMODB_REGION = 'us-east-1'
+AWS_ACCESS_KEY_ID = 'testing'
+AWS_SECRET_ACCESS_KEY = 'testing'
+
+# DynamoDB Sessions (no Redis needed)
+SESSION_ENGINE = 'django_dynamodb_backend.sessions'
+DYNAMODB_SESSION_TABLE_NAME = 'django_sessions'
+
+# DynamoDB Authentication (no django.contrib.auth needed)
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.contenttypes',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django_dynamodb_backend',
+    'django_dynamodb_backend.contrib.auth_dynamo',
+    # Your apps here
+]
+
+AUTH_USER_MODEL = 'auth_dynamo.DynamoUser'
+DYNAMODB_USER_TABLE_NAME = 'django_users'
+
+AUTHENTICATION_BACKENDS = [
+    'django_dynamodb_backend.contrib.auth_dynamo.backends.DynamoAuthBackend',
+]
 
 # Development logging
 LOGGING = {
@@ -70,30 +148,14 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
         },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': 'django.log',
-        },
     },
     'root': {
         'handlers': ['console'],
         'level': 'INFO',
     },
-    'loggers': {
-        'dynamodb_adapter': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'django.request': {
-            'handlers': ['console', 'file'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-    },
 }
 
-# Cache (optional for development)
+# Cache (optional - use in-memory for development)
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -105,11 +167,12 @@ CACHES = {
 ### 3. Development Commands
 
 ```bash
-# Apply migrations
-python manage.py dynamodb_migrate
+# Create DynamoDB tables for sessions and users
+python manage.py dynamodb_create_session_table
+python manage.py dynamodb_create_user_table --create-admin
 
-# Create superuser (uses standard Django auth)
-python manage.py createsuperuser
+# Apply app migrations
+python manage.py dynamodb_migrate
 
 # Run development server
 python manage.py runserver
@@ -136,6 +199,206 @@ if settings.DEBUG:
         path('__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
 ```
+
+---
+
+## Serverless Deployment (AWS Lambda)
+
+Django with DynamoDB-only mode is ideal for serverless deployments. No database connections to manage!
+
+```mermaid
+flowchart LR
+    CLIENT[Client] --> APIGW[API Gateway]
+    APIGW --> LAMBDA[Lambda Function<br/>Django + Mangum]
+    LAMBDA --> DDB[(DynamoDB)]
+    LAMBDA --> S3[(S3<br/>Static Files)]
+    
+    subgraph "DynamoDB Tables"
+        DDB --> SESS[django_sessions]
+        DDB --> USERS[django_users]
+        DDB --> APP[your_app_tables]
+    end
+    
+    style LAMBDA fill:#ff9900,color:#fff
+    style DDB fill:#4053d6,color:#fff
+    style S3 fill:#569a31,color:#fff
+```
+
+### 1. Project Structure
+
+```
+my-django-app/
+├── app/
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── myapp/
+│   └── models.py
+├── requirements.txt
+├── serverless.yml
+└── handler.py
+```
+
+### 2. Lambda Settings
+
+```python
+# app/settings.py
+import os
+
+DEBUG = False
+ALLOWED_HOSTS = ['*']
+
+# DynamoDB Configuration (uses Lambda's IAM role)
+DYNAMODB_REGION = os.environ.get('AWS_REGION', 'us-east-1')
+# No endpoint URL needed - uses real DynamoDB
+
+# DynamoDB Sessions
+SESSION_ENGINE = 'django_dynamodb_backend.sessions'
+DYNAMODB_SESSION_TABLE_NAME = os.environ.get('SESSION_TABLE', 'django_sessions')
+
+# DynamoDB Authentication
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.contenttypes',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django_dynamodb_backend',
+    'django_dynamodb_backend.contrib.auth_dynamo',
+    'myapp',
+]
+
+AUTH_USER_MODEL = 'auth_dynamo.DynamoUser'
+DYNAMODB_USER_TABLE_NAME = os.environ.get('USER_TABLE', 'django_users')
+
+AUTHENTICATION_BACKENDS = [
+    'django_dynamodb_backend.contrib.auth_dynamo.backends.DynamoAuthBackend',
+]
+
+# Security
+SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
+SECURE_SSL_REDIRECT = True
+```
+
+### 3. Serverless Configuration
+
+```yaml
+# serverless.yml
+service: django-dynamodb-app
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: us-east-1
+  environment:
+    DJANGO_SETTINGS_MODULE: app.settings
+    DJANGO_SECRET_KEY: ${ssm:/django-app/secret-key}
+    SESSION_TABLE: ${self:service}-sessions-${sls:stage}
+    USER_TABLE: ${self:service}-users-${sls:stage}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:BatchGetItem
+            - dynamodb:BatchWriteItem
+          Resource:
+            - arn:aws:dynamodb:${aws:region}:${aws:accountId}:table/${self:service}-*
+
+functions:
+  api:
+    handler: handler.handler
+    events:
+      - httpApi: '*'
+
+resources:
+  Resources:
+    SessionsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-sessions-${sls:stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: session_key
+            AttributeType: S
+        KeySchema:
+          - AttributeName: session_key
+            KeyType: HASH
+        TimeToLiveSpecification:
+          AttributeName: expire_date
+          Enabled: true
+
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:service}-users-${sls:stage}
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: username
+            AttributeType: S
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: username-index
+            KeySchema:
+              - AttributeName: username
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+          - IndexName: email-index
+            KeySchema:
+              - AttributeName: email
+                KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+```
+
+### 4. Lambda Handler
+
+```python
+# handler.py
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
+
+import django
+django.setup()
+
+from mangum import Mangum
+from app.wsgi import application
+
+handler = Mangum(application, lifespan='off')
+```
+
+### 5. Deploy
+
+```bash
+# Install serverless
+npm install -g serverless
+
+# Deploy
+serverless deploy --stage prod
+
+# Create admin user (one-time)
+serverless invoke -f api --data '{"manage": "dynamodb_create_user_table --create-admin"}'
+```
+
+### Benefits of Serverless DynamoDB-Only
+
+- **No cold start database connections**: DynamoDB is HTTP-based
+- **Automatic scaling**: Both Lambda and DynamoDB scale automatically
+- **Pay-per-use**: Only pay for actual requests
+- **Zero maintenance**: No database servers to manage
+- **Global deployment**: Easy multi-region with DynamoDB Global Tables
 
 ---
 
@@ -175,7 +438,7 @@ Create an IAM role with DynamoDB permissions:
 }
 ```
 
-### 2. Production Settings
+### 2. Production Settings (DynamoDB-Only)
 
 Create `settings/production.py`:
 
@@ -190,19 +453,31 @@ ALLOWED_HOSTS = [
     '*.amazonaws.com',  # For ELB health checks
 ]
 
-# Database configuration
-DATABASES = {
-    'default': {
-        'ENGINE': 'django_dynamo_admin.database',
-        'NAME': 'production_database',
-        'REGION': os.environ.get('AWS_DEFAULT_REGION', 'us-east-1'),
-        # Don't set LOCAL_ENDPOINT in production
-    }
-}
+# DynamoDB Configuration (uses IAM role credentials)
+DYNAMODB_REGION = os.environ.get('AWS_DEFAULT_REGION', 'us-east-1')
+# No endpoint URL in production - uses real DynamoDB
 
-# AWS credentials (preferably use IAM roles)
-# AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY from environment
-# or use IAM roles for EC2/ECS/Lambda
+# DynamoDB Sessions (no Redis needed!)
+SESSION_ENGINE = 'django_dynamodb_backend.sessions'
+DYNAMODB_SESSION_TABLE_NAME = os.environ.get('SESSION_TABLE', 'django_sessions')
+
+# DynamoDB Authentication
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.contenttypes',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django_dynamodb_backend',
+    'django_dynamodb_backend.contrib.auth_dynamo',
+    # Your apps
+]
+
+AUTH_USER_MODEL = 'auth_dynamo.DynamoUser'
+DYNAMODB_USER_TABLE_NAME = os.environ.get('USER_TABLE', 'django_users')
+
+AUTHENTICATION_BACKENDS = [
+    'django_dynamodb_backend.contrib.auth_dynamo.backends.DynamoAuthBackend',
+]
 
 # Security
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
@@ -224,19 +499,14 @@ MEDIA_URL = 'https://your-media-bucket.s3.amazonaws.com/'
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 AWS_STORAGE_BUCKET_NAME = 'your-media-bucket'
 
-# Caching (use ElastiCache)
+# Optional: In-memory cache for high-traffic scenarios
+# (DynamoDB sessions already handle persistence)
 CACHES = {
     'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://your-elasticache-endpoint:6379/1',
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        }
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
     }
 }
-
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
 
 # Email (use SES)
 EMAIL_BACKEND = 'django_ses.SESBackend'
@@ -544,7 +814,7 @@ EXPOSE 8000
 
 ## Docker Deployment
 
-### Docker Compose for Development
+### Docker Compose for Development (DynamoDB-Only)
 
 ```yaml
 version: '3.8'
@@ -553,55 +823,44 @@ services:
   web:
     build: .
     ports:
-      - "8000:8000"
+      - "8001:8000"
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
-      - media_volume:/app/media
     environment:
       - DEBUG=1
       - DJANGO_SETTINGS_MODULE=settings.development
+      - DYNAMODB_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=testing
+      - AWS_SECRET_ACCESS_KEY=testing
     depends_on:
-      - dynamodb-local
-      - redis
+      localstack:
+        condition: service_healthy
     command: python manage.py runserver 0.0.0.0:8000
 
-  dynamodb-local:
-    image: amazon/dynamodb-local:latest
-    container_name: dynamodb-local
+  localstack:
+    image: localstack/localstack:latest
     ports:
-      - "8000:8000"
+      - "4566:4566"
+    environment:
+      - SERVICES=dynamodb
+      - DEBUG=1
     volumes:
-      - dynamodb_data:/home/dynamodblocal/data
-    working_dir: /home/dynamodblocal
-    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-dbPath", "./data"]
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - static_volume:/var/www/static
-      - media_volume:/var/www/media
-    depends_on:
-      - web
+      - localstack_data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  dynamodb_data:
-  redis_data:
+  localstack_data:
   static_volume:
-  media_volume:
 ```
 
-### Production Docker Compose
+**Note:** No Redis container needed! Sessions are stored in DynamoDB.
+
+### Production Docker Compose (DynamoDB-Only)
 
 ```yaml
 version: '3.8'
@@ -615,13 +874,13 @@ services:
       - 8000
     volumes:
       - static_volume:/app/staticfiles
-      - media_volume:/app/media
     environment:
       - DJANGO_SETTINGS_MODULE=settings.production
+      # Real DynamoDB - no endpoint URL needed
+      - AWS_DEFAULT_REGION=us-east-1
     env_file:
       - .env.prod
-    depends_on:
-      - redis
+    # No redis dependency!
 
   nginx:
     build: ./nginx
@@ -630,17 +889,11 @@ services:
       - 443:443
     volumes:
       - static_volume:/var/www/static
-      - media_volume:/var/www/media
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
     depends_on:
       - web
     command: '/bin/sh -c ''while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"'''
-
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - redis_data:/data
 
   certbot:
     image: certbot/certbot
@@ -651,9 +904,9 @@ services:
 
 volumes:
   static_volume:
-  media_volume:
-  redis_data:
 ```
+
+**Note:** No Redis container needed in production! DynamoDB handles sessions.
 
 ---
 
@@ -1241,3 +1494,15 @@ class PerformanceMiddleware:
 ```
 
 This deployment guide covers the essential aspects of deploying Django with DynamoDB from development to production. Remember to adapt the configurations to your specific requirements and follow AWS best practices for security and performance.
+
+---
+
+## Related Documentation
+
+| Document | When to read |
+|----------|-------------|
+| [Documentation Index](INDEX.md) | Find the right doc for any task |
+| [Migration Tutorial](MIGRATION_TUTORIAL.md) | Step-by-step setup guide |
+| [Django Compatibility Guide](DJANGO_COMPATIBILITY.md) | Check feature support and limitations |
+| [API Reference](API_REFERENCE.md) | Look up method signatures |
+| [Feature Walkthrough](FEATURE_WALKTHROUGH.md) | Deep-dive into all features |

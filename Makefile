@@ -1,11 +1,21 @@
 # Django DynamoDB Backend - Development Makefile
 
-.PHONY: help local-dev stop clean logs shell test build install lint format
+.PHONY: help demo demo-stop demo-reset demo-logs demo-shell local-dev stop clean logs shell test build install lint format
 
 # Default target
 help:
 	@echo "🚀 Django DynamoDB Backend - Development Commands"
 	@echo "================================================"
+	@echo ""
+	@echo "Quick Start (Recommended for newcomers):"
+	@echo "  demo        - 🎯 One command to start everything with sample data"
+	@echo ""
+	@echo "Demo Commands:"
+	@echo "  demo        - Start demo with DynamoDB, sample data, and Django server"
+	@echo "  demo-stop   - Stop the demo environment"
+	@echo "  demo-reset  - Reset demo (clear data and reinitialize)"
+	@echo "  demo-logs   - View demo logs"
+	@echo "  demo-shell  - Open Django shell in demo environment"
 	@echo ""
 	@echo "Development Environment:"
 	@echo "  local-dev   - Start local development environment with LocalStack"
@@ -23,7 +33,45 @@ help:
 	@echo "  install     - Install development dependencies"
 	@echo "  build       - Build Docker images"
 
+# ============================================
+# Demo Commands (Quick Start for Newcomers)
+# ============================================
+
+demo:
+	@echo ""
+	@echo "╔══════════════════════════════════════════════════════════════╗"
+	@echo "║        Django DynamoDB Backend - Demo Environment            ║"
+	@echo "╚══════════════════════════════════════════════════════════════╝"
+	@echo ""
+	@echo "Starting demo environment with:"
+	@echo "  • LocalStack (DynamoDB)"
+	@echo "  • Redis (caching)"
+	@echo "  • Django development server"
+	@echo "  • Sample data (blog posts, products, orders)"
+	@echo ""
+	docker compose --profile demo up --build
+
+demo-stop:
+	@echo "🛑 Stopping demo environment..."
+	docker compose --profile demo down
+
+demo-reset:
+	@echo "🔄 Resetting demo environment..."
+	docker compose --profile demo down -v
+	@echo "✅ Demo data cleared. Run 'make demo' to start fresh."
+
+demo-logs:
+	@echo "📋 Viewing demo logs..."
+	docker compose --profile demo logs -f demo
+
+demo-shell:
+	@echo "🐚 Opening Django shell in demo environment..."
+	docker compose --profile demo exec demo python manage.py shell
+
+# ============================================
 # Development Environment Commands
+# ============================================
+
 local-dev:
 	@echo "🚀 Starting local development environment..."
 	docker compose -f docker-compose.yml up --build

@@ -7,16 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **🚀 DynamoDB-Only Mode**: Run Django 100% on DynamoDB without any relational database
+- **DynamoDB Sessions** (`django_dynamodb_backend.sessions`)
+  - `SessionStore` class implementing Django's session backend API
+  - Automatic TTL-based session expiration using DynamoDB TTL feature
+  - Compressed session data with base64 encoding
+  - Management command: `dynamodb_create_session_table`
+- **DynamoDB Authentication** (`django_dynamodb_backend.contrib.auth_dynamo`)
+  - `DynamoUser` model with UUID primary key
+  - GSIs for O(1) username and email lookups
+  - `DynamoUserManager` with `create_user()` and `create_superuser()`
+  - `DynamoAuthBackend` for username/password authentication
+  - Django Admin integration with user management forms
+  - Permission system using comma-separated permission strings
+  - Management command: `dynamodb_create_user_table [--create-admin]`
+- **Demo improvements**
+  - `make demo` now runs entirely on DynamoDB (no Redis or SQLite)
+  - Automatic creation of sessions and users tables
+  - Admin user seeded automatically (admin/admin123)
+
 ### Changed
 - **BREAKING**: Restructured project as pip-installable package with `src/` layout
 - **BREAKING**: Renamed package from `django_dynamo_admin.dynamodb_adapter` to `django_dynamodb_backend`
 - **BREAKING**: Changed database engine path from `django_dynamo_admin.database` to `django_dynamodb_backend.db`
+- Demo no longer requires Redis (sessions moved to DynamoDB)
+- Demo no longer requires SQLite (auth moved to DynamoDB)
+- Docker Compose updated to make Redis optional (profile: `with-redis`)
 - Moved tests to root `tests/` directory
 - Moved demo project to `examples/demo_project/`
 - Added modern `pyproject.toml` configuration
 - Simplified `setup.py` to minimal shim for backward compatibility
 - Updated Python version requirement to 3.11+ (removed 3.12 from CI due to compatibility issues)
 - Simplified project documentation
+- Updated `docs/DJANGO_COMPATIBILITY.md` with DynamoDB-only deployment guide
+- Added `docs/MIGRATION_TUTORIAL.md` - step-by-step guide for migrating existing Django projects
+- Updated all documentation for DynamoDB-only mode
 
 ### Migration Guide
 Update your imports:

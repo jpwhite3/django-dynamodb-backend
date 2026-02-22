@@ -13,13 +13,14 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
-    "django.contrib.auth",
+    "django.contrib.auth",  # Required for admin (provides User proxy)
     "django.contrib.contenttypes",
-    "django.contrib.sessions",
+    "django.contrib.sessions",  # Required for session middleware
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # DynamoDB integration
     "django_dynamodb_backend",
+    "django_dynamodb_backend.contrib.auth_dynamo",  # DynamoDB-based auth
     # Demo applications
     "examples.demo_project.apps.blog",
     "examples.demo_project.apps.ecommerce",
@@ -74,22 +75,29 @@ DATABASES = {
     }
 }
 
-# Cache configuration using Redis
+# Cache configuration - using local memory cache (no Redis required)
+# For production, consider using DynamoDB or ElastiCache
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://redis:6379/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
         "KEY_PREFIX": "django_dynamo_demo",
         "TIMEOUT": 300,
     }
 }
 
-# Session configuration
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "default"
+# Session configuration - using DynamoDB sessions
+SESSION_ENGINE = "django_dynamodb_backend.sessions"
+DYNAMODB_SESSION_TABLE_NAME = "django_sessions"
+
+# Authentication configuration - using DynamoDB auth
+AUTH_USER_MODEL = "auth_dynamo.DynamoUser"
+DYNAMODB_USER_TABLE_NAME = "django_users"
+
+# Authentication backends
+AUTHENTICATION_BACKENDS = [
+    "django_dynamodb_backend.contrib.auth_dynamo.backends.DynamoAuthBackend",
+]
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

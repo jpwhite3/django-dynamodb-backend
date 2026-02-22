@@ -7,10 +7,13 @@ This document provides detailed API reference for all components of the DynamoDB
 - [Models](#models)
 - [QuerySet and Manager](#queryset-and-manager)
 - [Admin Classes](#admin-classes)
+- [Sessions](#sessions)
+- [Authentication (auth_dynamo)](#authentication-auth_dynamo)
 - [Migration System](#migration-system)
 - [Filters](#filters)
 - [Forms](#forms)
 - [Database Backend](#database-backend)
+- [Management Commands](#management-commands)
 
 ## Models
 
@@ -341,6 +344,239 @@ Sets the LastEvaluatedKey for pagination.
 - `key` (dict): DynamoDB LastEvaluatedKey
 
 **Returns:** `DynamoDBQuerySet`
+
+---
+
+## Sessions
+
+### SessionStore
+
+DynamoDB-backed session store implementing Django's session backend API.
+
+```python
+from django_dynamodb_backend.sessions import SessionStore
+```
+
+#### Configuration
+
+```python
+# settings.py
+SESSION_ENGINE = 'django_dynamodb_backend.sessions'
+DYNAMODB_SESSION_TABLE_NAME = 'django_sessions'  # Default
+```
+
+#### Methods
+
+##### `load()`
+Load session data from DynamoDB.
+
+**Returns:** `dict` - Session data
+
+##### `save(must_create=False)`
+Save session data to DynamoDB.
+
+**Parameters:**
+- `must_create` (bool): If True, raise CreateError if session already exists
+
+##### `delete(session_key=None)`
+Delete a session from DynamoDB.
+
+##### `exists(session_key)`
+Check if a session key exists.
+
+**Returns:** `bool`
+
+##### `create()`
+Create a new session with a unique key.
+
+##### `clear_expired()`
+No-op since DynamoDB TTL handles expiration automatically.
+
+### create_session_table()
+
+Create the DynamoDB sessions table with TTL enabled.
+
+```python
+from django_dynamodb_backend.sessions import create_session_table
+
+create_session_table()
+```
+
+**Table Schema:**
+- Partition Key: `session_key` (String)
+- TTL Attribute: `expire_date` (Number, Unix timestamp)
+- Billing Mode: PAY_PER_REQUEST
+
+---
+
+## Authentication (auth_dynamo)
+
+### DynamoUser
+
+DynamoDB-backed User model compatible with Django's auth system.
+
+```python
+from django_dynamodb_backend.contrib.auth_dynamo.models import DynamoUser
+```
+
+#### Configuration
+
+```python
+# settings.py
+INSTALLED_APPS = [
+    ...
+    'django_dynamodb_backend.contrib.auth_dynamo',
+]
+
+AUTH_USER_MODEL = 'auth_dynamo.DynamoUser'
+DYNAMODB_USER_TABLE_NAME = 'django_users'  # Default
+
+AUTHENTICATION_BACKENDS = [
+    'django_dynamodb_backend.contrib.auth_dynamo.backends.DynamoAuthBackend',
+]
+```
+
+#### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | CharField (PK) | UUID primary key |
+| `username` | CharField | Unique username (GSI) |
+| `email` | EmailField | Email address (GSI) |
+| `password` | CharField | Hashed password |
+| `first_name` | CharField | First name |
+| `last_name` | CharField | Last name |
+| `is_active` | BooleanField | Active status |
+| `is_staff` | BooleanField | Staff status |
+| `is_superuser` | BooleanField | Superuser status |
+| `date_joined` | DateTimeField | Registration date |
+| `last_login` | DateTimeField | Last login time |
+| `user_permissions` | TextField | Comma-separated permissions |
+| `groups` | TextField | Comma-separated group names |
+
+#### Methods
+
+##### `set_password(raw_password)`
+Hash and set the password.
+
+##### `check_password(raw_password)`
+Check if the provided password matches.
+
+**Returns:** `bool`
+
+##### `has_perm(perm, obj=None)`
+Check if user has a specific permission.
+
+**Returns:** `bool`
+
+##### `has_module_perms(app_label)`
+Check if user has any permission in the app.
+
+**Returns:** `bool`
+
+##### `get_all_permissions(obj=None)`
+Return all permissions the user has.
+
+**Returns:** `set`
+
+##### `add_permission(perm)`
+Add a permission to the user.
+
+##### `remove_permission(perm)`
+Remove a permission from the user.
+
+#### Example
+
+```python
+from django_dynamodb_backend.contrib.auth_dynamo.models import DynamoUser
+
+# Create user
+user = DynamoUser.objects.create_user(
+    username='john',
+    email='john@example.com',
+    password='secret123'
+)
+
+# Create superuser
+admin = DynamoUser.objects.create_superuser(
+    username='admin',
+    email='admin@example.com',
+    password='admin123'
+)
+
+# Check permissions
+if user.has_perm('myapp:model:add'):
+    ...
+```
+
+### DynamoUserManager
+
+Manager for DynamoUser with authentication-specific methods.
+
+```python
+from django_dynamodb_backend.contrib.auth_dynamo.managers import DynamoUserManager
+```
+
+#### Methods
+
+##### `create_user(username, email=None, password=None, **extra_fields)`
+Create a regular user.
+
+**Parameters:**
+- `username` (str): Required username
+- `email` (str): Optional email
+- `password` (str): Password (will be hashed)
+- `**extra_fields`: Additional fields
+
+**Returns:** `DynamoUser`
+
+##### `create_superuser(username, email=None, password=None, **extra_fields)`
+Create a superuser with staff and superuser flags.
+
+**Returns:** `DynamoUser`
+
+##### `get(pk=None, username=None, email=None)`
+Get user by primary key, username (GSI), or email (GSI).
+
+**Returns:** `DynamoUser`
+
+**Raises:** `DynamoUser.DoesNotExist`
+
+### DynamoAuthBackend
+
+Authentication backend for DynamoDB users.
+
+```python
+from django_dynamodb_backend.contrib.auth_dynamo.backends import DynamoAuthBackend
+```
+
+#### Methods
+
+##### `authenticate(request, username=None, password=None, **kwargs)`
+Authenticate a user by username and password.
+
+**Returns:** `DynamoUser` or `None`
+
+##### `get_user(user_id)`
+Get a user by their primary key.
+
+**Returns:** `DynamoUser` or `None`
+
+### create_user_table()
+
+Create the DynamoDB users table with GSIs.
+
+```python
+from django_dynamodb_backend.contrib.auth_dynamo.models import create_user_table
+
+create_user_table()
+```
+
+**Table Schema:**
+- Partition Key: `id` (String)
+- GSI `username-index`: Partition Key = `username`
+- GSI `email-index`: Partition Key = `email`
+- Billing Mode: PAY_PER_REQUEST
 
 ---
 
@@ -931,4 +1167,90 @@ DYNAMODB_MIGRATION_BATCH_SIZE = 25
 
 ---
 
-This completes the API reference for the DynamoDB Django Admin system. For more examples and detailed usage patterns, refer to the tutorials and example code in the repository.
+## Management Commands
+
+### dynamodb_create_session_table
+
+Create the DynamoDB sessions table with TTL enabled.
+
+```bash
+python manage.py dynamodb_create_session_table
+```
+
+### dynamodb_create_user_table
+
+Create the DynamoDB users table with GSIs.
+
+```bash
+# Create table only
+python manage.py dynamodb_create_user_table
+
+# Create table and admin user
+python manage.py dynamodb_create_user_table --create-admin
+
+# Custom admin credentials
+python manage.py dynamodb_create_user_table --create-admin \
+    --admin-username=myadmin \
+    --admin-password=mypassword \
+    --admin-email=admin@example.com
+```
+
+**Options:**
+- `--create-admin`: Also create an admin superuser
+- `--admin-username`: Username for admin (default: `admin`)
+- `--admin-password`: Password for admin (default: `admin123`)
+- `--admin-email`: Email for admin (default: `admin@example.com`)
+
+### dynamodb_migrate
+
+Apply DynamoDB migrations.
+
+```bash
+python manage.py dynamodb_migrate [app_label] [migration_name]
+```
+
+**Options:**
+- `--fake`: Mark migrations as applied without executing
+- `--list`: Show migration status
+- `--plan`: Show migration plan without executing
+
+### dynamodb_makemigrations
+
+Create new DynamoDB migration files.
+
+```bash
+python manage.py dynamodb_makemigrations app_label
+```
+
+**Options:**
+- `--name NAME`: Custom migration name
+- `--empty`: Create empty migration
+- `--create-table MODEL`: Create table operation for model
+
+### dynamodb_showmigrations
+
+Show DynamoDB migration status.
+
+```bash
+python manage.py dynamodb_showmigrations [app_label]
+```
+
+### dynamodb_rollback
+
+Rollback to a specific DynamoDB migration.
+
+```bash
+python manage.py dynamodb_rollback app_label migration_name
+```
+
+---
+
+## Related Documentation
+
+| Document | When to read |
+|----------|-------------|
+| [Documentation Index](INDEX.md) | Find the right doc for any task |
+| [Migration Tutorial](MIGRATION_TUTORIAL.md) | Step-by-step setup guide |
+| [Django Compatibility Guide](DJANGO_COMPATIBILITY.md) | Check feature support and limitations |
+| [Deployment Guide](DEPLOYMENT_GUIDE.md) | Production deployment instructions |
+| [Feature Walkthrough](FEATURE_WALKTHROUGH.md) | Deep-dive with code examples |

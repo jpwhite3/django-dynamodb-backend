@@ -7,9 +7,9 @@ We welcome contributions! This document provides guidelines for contributing to 
 ### Prerequisites
 
 - Python 3.11+
-- Django 5.2+
+- Django 5.2+ or Django 6.2+
 - pipenv
-- Docker (for local DynamoDB)
+- Docker and Docker Compose (for LocalStack DynamoDB)
 
 ### Development Setup
 
@@ -26,10 +26,23 @@ cd django-dynamodb-backend
 pipenv install --dev
 ```
 
-3. **Run Tests**
+3. **Start LocalStack (DynamoDB)**
+
+```bash
+docker compose up -d localstack
+```
+
+4. **Run Tests**
 
 ```bash
 pipenv run pytest tests/
+```
+
+5. **Run the Demo** (optional)
+
+```bash
+make demo
+# Visit http://localhost:8001/admin/ (admin/admin123)
 ```
 
 ## Development Workflow
@@ -115,6 +128,63 @@ tests/
 └── performance/    # Performance tests
 ```
 
+## Project Structure
+
+```mermaid
+flowchart TB
+    subgraph Package["django_dynamodb_backend"]
+        MODELS[models.py<br/>DynamoDBModel]
+        MANAGERS[managers.py<br/>QuerySet]
+        ADMIN[admin.py<br/>DynamoDBAdmin]
+        SESSIONS[sessions.py<br/>SessionStore]
+        
+        subgraph Auth["contrib/auth_dynamo"]
+            AUTH_MODELS[models.py]
+            AUTH_BACKEND[backends.py]
+        end
+        
+        subgraph Migrations["migrations_dynamo"]
+            MIGRATE[executor.py]
+        end
+        
+        subgraph Commands["management/commands"]
+            CMD1[dynamodb_migrate]
+            CMD2[dynamodb_create_*]
+        end
+    end
+    
+    MODELS --> MANAGERS
+    ADMIN --> MODELS
+    SESSIONS --> DDB[(DynamoDB)]
+    Auth --> DDB
+    MANAGERS --> DDB
+```
+
+Key modules in `src/django_dynamodb_backend/`:
+
+| Module | Description |
+|--------|-------------|
+| `models.py` | Base DynamoDBModel class |
+| `managers.py` | QuerySet implementation with Django ORM compatibility |
+| `admin.py` | DynamoDBAdmin for Django admin integration |
+| `sessions.py` | DynamoDB session backend |
+| `contrib/auth_dynamo/` | DynamoDB-backed authentication (users, permissions) |
+| `migrations_dynamo/` | DynamoDB migration system |
+| `management/commands/` | Management commands for table creation |
+
+### Sessions Module (`sessions.py`)
+
+Provides Django session storage backed by DynamoDB with TTL for automatic expiration.
+
+### Auth Module (`contrib/auth_dynamo/`)
+
+Provides DynamoDB-backed user authentication:
+- `models.py` - DynamoUser model
+- `managers.py` - DynamoUserManager with GSI lookups
+- `backends.py` - DynamoAuthBackend for Django authentication
+- `admin.py` - Admin interface for user management
+- `forms.py` - User creation and change forms
+
 ## Pull Request Guidelines
 
 1. Update documentation if needed
@@ -122,6 +192,20 @@ tests/
 3. Ensure all CI checks pass
 4. Keep changes focused and atomic
 5. Write clear commit messages
+
+## Useful Make Commands
+
+```bash
+make demo          # Start the demo environment
+make test          # Run tests
+make lint          # Run linters (black, isort, flake8)
+make format        # Auto-format code
+make clean         # Clean up containers and cache
+```
+
+## Related Documentation
+
+For user-facing documentation, see the [Documentation Index](docs/INDEX.md).
 
 ## Questions?
 

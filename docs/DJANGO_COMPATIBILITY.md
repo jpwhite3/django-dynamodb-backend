@@ -2,6 +2,34 @@
 
 This document details the Django ORM and Admin features supported by the DynamoDB backend, along with known limitations and DynamoDB-specific alternatives.
 
+## How It Works
+
+```mermaid
+flowchart LR
+    subgraph "Your Code"
+        MODEL[DynamoDBModel]
+        QS[QuerySet API<br/>filter, get, create...]
+    end
+    
+    subgraph "Django DynamoDB Backend"
+        MANAGER[DynamoDBManager]
+        COMPILER[Query Compiler]
+    end
+    
+    subgraph "AWS"
+        DDB[(DynamoDB)]
+    end
+    
+    MODEL --> MANAGER
+    QS --> MANAGER
+    MANAGER --> COMPILER
+    COMPILER -->|Query/Scan| DDB
+    
+    style MODEL fill:#4caf50,color:#fff
+    style QS fill:#4caf50,color:#fff
+    style DDB fill:#4053d6,color:#fff
+```
+
 ## QuerySet Methods
 
 ### Fully Supported
@@ -401,3 +429,150 @@ except ClientError as e:
 import logging
 logging.getLogger('django_dynamodb_backend').setLevel(logging.DEBUG)
 ```
+
+## DynamoDB-Only Deployment
+
+This backend supports running Django **exclusively on DynamoDB** without any relational database. This is ideal for serverless deployments on AWS Lambda, keeping everything within free tier.
+
+### What's Included
+
+| Component | DynamoDB Implementation |
+|-----------|------------------------|
+| Sessions | `django_dynamodb_backend.sessions.SessionStore` with TTL |
+| Users | `django_dynamodb_backend.contrib.auth_dynamo.DynamoUser` |
+| Authentication | `django_dynamodb_backend.contrib.auth_dynamo.backends.DynamoAuthBackend` |
+| Admin | Works with DynamoUser via GSIs on username/email |
+
+### Configuration
+
+```python
+# settings.py
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',  # Required for admin
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    # DynamoDB integration
+    'django_dynamodb_backend',
+    'django_dynamodb_backend.contrib.auth_dynamo',
+]
+
+# Database
+DATABASES = {
+    'default': {
+        'ENGINE': 'django_dynamodb_backend.db',
+        'NAME': 'my_app',
+        'OPTIONS': {
+            'region_name': 'us-east-1',
+            # For local development with LocalStack:
+            'endpoint_url': 'http://localhost:4566',
+            'aws_access_key_id': 'test',
+            'aws_secret_access_key': 'test',
+        },
+    }
+}
+
+# Sessions - DynamoDB with TTL
+SESSION_ENGINE = 'django_dynamodb_backend.sessions'
+DYNAMODB_SESSION_TABLE_NAME = 'django_sessions'
+
+# Authentication - DynamoDB users
+AUTH_USER_MODEL = 'auth_dynamo.DynamoUser'
+DYNAMODB_USER_TABLE_NAME = 'django_users'
+AUTHENTICATION_BACKENDS = [
+    'django_dynamodb_backend.contrib.auth_dynamo.backends.DynamoAuthBackend',
+]
+
+# Cache - local memory (or use DynamoDB/ElastiCache)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+```
+
+### Table Setup
+
+Create the required DynamoDB tables:
+
+```bash
+# Create sessions table (with TTL)
+python manage.py dynamodb_create_session_table
+
+# Create users table (with GSIs) and admin user
+python manage.py dynamodb_create_user_table --create-admin
+
+# Create app-specific tables
+python manage.py dynamodb_migrate
+```
+
+### DynamoDB Table Schemas
+
+```mermaid
+erDiagram
+    django_sessions {
+        string session_key PK
+        string session_data
+        number expire_date "TTL"
+    }
+    
+    django_users {
+        string id PK
+        string username "GSI"
+        string email "GSI"
+        string password
+        string first_name
+        string last_name
+        boolean is_active
+        boolean is_staff
+        boolean is_superuser
+        string date_joined
+        string last_login
+    }
+    
+    your_app_table {
+        string id PK
+        string sort_key SK
+        string your_fields "..."
+    }
+```
+
+**django_sessions**
+- Partition Key: `session_key` (String)
+- TTL Attribute: `expire_date` (Unix timestamp)
+- Billing: Pay-per-request
+
+**django_users**
+- Partition Key: `id` (String, UUID)
+- GSI `username-index`: Partition Key = `username`
+- GSI `email-index`: Partition Key = `email`
+- Billing: Pay-per-request
+
+### Cost Optimization
+
+Using Pay-per-request billing mode keeps costs minimal for low-traffic apps:
+- No provisioned capacity charges
+- Pay only for actual reads/writes
+- Typically fits within AWS free tier for development
+
+### Limitations
+
+1. **No SQL migrations**: Don't run `migrate` for auth/sessions tables
+2. **Groups**: Basic string-based implementation (no full Group model)
+3. **Permissions**: Stored as comma-separated strings, not FK relationships
+4. **Admin logs**: Use Python logging instead of LogEntry model
+
+---
+
+## Related Documentation
+
+| Document | When to read |
+|----------|-------------|
+| [Documentation Index](INDEX.md) | Find the right doc for any task |
+| [Migration Tutorial](MIGRATION_TUTORIAL.md) | Step-by-step guide for migrating projects |
+| [API Reference](API_REFERENCE.md) | Complete API documentation |
+| [Deployment Guide](DEPLOYMENT_GUIDE.md) | Production deployment instructions |
+| [Feature Walkthrough](FEATURE_WALKTHROUGH.md) | Deep-dive into all features |
