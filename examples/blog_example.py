@@ -1,5 +1,5 @@
 """
-Complete Blog Example using DynamoDB Django Admin
+Complete Blog Example using Django DynamoDB Backend
 
 This example demonstrates a full blog application using DynamoDB as the backend,
 including models, admin configuration, and management commands.
@@ -668,7 +668,7 @@ def demonstrate_queries():
 
 if __name__ == "__main__":
     # This would typically be run from Django management commands
-    print("Blog Example - DynamoDB Django Admin")
+    print("Blog Example - Django DynamoDB Backend")
     print("=====================================")
     print("This example demonstrates:")
     print("- Complex DynamoDB model relationships")

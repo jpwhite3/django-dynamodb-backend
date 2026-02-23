@@ -5,7 +5,7 @@ All notable changes to Django DynamoDB Backend will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased] (targeting 2.0.0)
 
 ### Added
 - **🚀 DynamoDB-Only Mode**: Run Django 100% on DynamoDB without any relational database
@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved demo project to `examples/demo_project/`
 - Added modern `pyproject.toml` configuration
 - Simplified `setup.py` to minimal shim for backward compatibility
-- Updated Python version requirement to 3.11+ (removed 3.12 from CI due to compatibility issues)
+- Updated Python version requirement to 3.11+ (supports 3.11, 3.12, 3.13, and 3.14)
 - Simplified project documentation
 - Updated `docs/DJANGO_COMPATIBILITY.md` with DynamoDB-only deployment guide
 - Added `docs/MIGRATION_TUTORIAL.md` - step-by-step guide for migrating existing Django projects

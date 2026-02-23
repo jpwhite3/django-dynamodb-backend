@@ -1,4 +1,4 @@
-# DynamoDB Django Admin - Deployment Guide
+# Django DynamoDB Backend - Deployment Guide
 
 This guide covers deploying Django with DynamoDB in various environments, from development to production.
 
@@ -59,7 +59,7 @@ The fastest way to get started is using **DynamoDB-only mode**, which runs Djang
 
 ```bash
 # Clone and setup
-git clone https://github.com/your-org/django-dynamodb-backend.git
+git clone https://github.com/jpwhite3/django-dynamodb-backend.git
 cd django-dynamodb-backend
 
 # Start the demo (DynamoDB-only)
@@ -122,10 +122,12 @@ AWS_SECRET_ACCESS_KEY = 'testing'
 SESSION_ENGINE = 'django_dynamodb_backend.sessions'
 DYNAMODB_SESSION_TABLE_NAME = 'django_sessions'
 
-# DynamoDB Authentication (no django.contrib.auth needed)
+# DynamoDB Authentication
 INSTALLED_APPS = [
     'django.contrib.admin',
+    'django.contrib.auth',           # Required for admin
     'django.contrib.contenttypes',
+    'django.contrib.sessions',       # Required for session middleware
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_dynamodb_backend',
@@ -259,7 +261,9 @@ DYNAMODB_SESSION_TABLE_NAME = os.environ.get('SESSION_TABLE', 'django_sessions')
 # DynamoDB Authentication
 INSTALLED_APPS = [
     'django.contrib.admin',
+    'django.contrib.auth',           # Required for admin
     'django.contrib.contenttypes',
+    'django.contrib.sessions',       # Required for session middleware
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_dynamodb_backend',
@@ -464,7 +468,9 @@ DYNAMODB_SESSION_TABLE_NAME = os.environ.get('SESSION_TABLE', 'django_sessions')
 # DynamoDB Authentication
 INSTALLED_APPS = [
     'django.contrib.admin',
+    'django.contrib.auth',           # Required for admin
     'django.contrib.contenttypes',
+    'django.contrib.sessions',       # Required for session middleware
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_dynamodb_backend',
@@ -547,7 +553,7 @@ LOGGING = {
         'level': 'INFO',
     },
     'loggers': {
-        'dynamodb_adapter': {
+        'django_dynamodb_backend': {
             'handlers': ['file'],
             'level': 'INFO',
             'propagate': False,
@@ -568,13 +574,15 @@ DYNAMODB_ADMIN_CACHE_TIMEOUT = 300
 
 ### 3. EC2 Deployment
 
+The EC2 deployment below follows standard Django deployment practices. The key DynamoDB-specific requirement is ensuring your EC2 instance's IAM role has the DynamoDB permissions from Step 1 above.
+
 #### Requirements File
 
 ```bash
 # requirements/production.txt
 -r base.txt
 gunicorn==20.1.0
-django-redis==5.2.0
+django-redis==5.2.0  # Only needed if using Redis for caching
 django-storages==1.13.2
 boto3==1.26.137
 django-ses==3.4.1
@@ -589,7 +597,7 @@ django-ses==3.4.1
 set -e
 
 # Configuration
-PROJECT_NAME="django-dynamo-admin"
+PROJECT_NAME="django-dynamodb-backend"
 PROJECT_DIR="/opt/$PROJECT_NAME"
 VENV_DIR="/opt/venvs/$PROJECT_NAME"
 USER="www-data"
@@ -627,26 +635,26 @@ echo "Deployment completed successfully!"
 
 #### Systemd Service
 
-Create `/etc/systemd/system/django-dynamo-admin.service`:
+Create `/etc/systemd/system/django-dynamodb-backend.service`:
 
 ```ini
 [Unit]
-Description=Django DynamoDB Admin
+Description=Django DynamoDB Backend
 After=network.target
 
 [Service]
 User=www-data
 Group=www-data
-WorkingDirectory=/opt/django-dynamo-admin
+WorkingDirectory=/opt/django-dynamodb-backend
 Environment="DJANGO_SETTINGS_MODULE=settings.production"
-Environment="PYTHONPATH=/opt/django-dynamo-admin"
-ExecStart=/opt/venvs/django-dynamo-admin/bin/gunicorn \
+Environment="PYTHONPATH=/opt/django-dynamodb-backend"
+ExecStart=/opt/venvs/django-dynamodb-backend/bin/gunicorn \
     --workers 3 \
-    --bind unix:/run/gunicorn/django-dynamo-admin.sock \
+    --bind unix:/run/gunicorn/django-dynamodb-backend.sock \
     --timeout 120 \
     --max-requests 1000 \
     --max-requests-jitter 50 \
-    django_dynamodb_backend.wsgi:application
+    app.wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 TimeoutStopSec=5
@@ -658,7 +666,7 @@ WantedBy=multi-user.target
 
 #### Nginx Configuration
 
-Create `/etc/nginx/sites-available/django-dynamo-admin`:
+Create `/etc/nginx/sites-available/django-dynamodb-backend`:
 
 ```nginx
 server {
@@ -696,7 +704,7 @@ server {
     
     location / {
         include proxy_params;
-        proxy_pass http://unix:/run/gunicorn/django-dynamo-admin.sock;
+        proxy_pass http://unix:/run/gunicorn/django-dynamodb-backend.sock;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_connect_timeout 30s;
         proxy_send_timeout 120s;
@@ -748,7 +756,7 @@ USER appuser
 RUN python manage.py collectstatic --noinput --settings=settings.production
 
 # Run gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "django_dynamodb_backend.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "app.wsgi:application"]
 
 EXPOSE 8000
 ```
@@ -757,17 +765,17 @@ EXPOSE 8000
 
 ```json
 {
-    "family": "django-dynamo-admin",
+    "family": "django-dynamodb-backend",
     "networkMode": "awsvpc",
     "requiresCompatibilities": ["FARGATE"],
     "cpu": "512",
     "memory": "1024",
     "executionRoleArn": "arn:aws:iam::ACCOUNT:role/ecsTaskExecutionRole",
-    "taskRoleArn": "arn:aws:iam::ACCOUNT:role/django-dynamo-admin-task-role",
+    "taskRoleArn": "arn:aws:iam::ACCOUNT:role/django-dynamodb-backend-task-role",
     "containerDefinitions": [
         {
             "name": "django-app",
-            "image": "your-account.dkr.ecr.region.amazonaws.com/django-dynamo-admin:latest",
+            "image": "your-account.dkr.ecr.region.amazonaws.com/django-dynamodb-backend:latest",
             "portMappings": [
                 {
                     "containerPort": 8000,
@@ -793,7 +801,7 @@ EXPOSE 8000
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
-                    "awslogs-group": "/ecs/django-dynamo-admin",
+                    "awslogs-group": "/ecs/django-dynamodb-backend",
                     "awslogs-region": "us-east-1",
                     "awslogs-stream-prefix": "ecs"
                 }
@@ -1050,7 +1058,7 @@ import boto3
 import time
 from django.conf import settings
 
-cloudwatch = boto3.client('cloudwatch', region_name=settings.DATABASES['default']['REGION'])
+cloudwatch = boto3.client('cloudwatch', region_name=settings.DATABASES['default']['OPTIONS']['region_name'])
 
 def send_custom_metric(name, value, unit='Count', namespace='DynamoAdmin'):
     """Send custom metric to CloudWatch."""
@@ -1103,13 +1111,13 @@ LOGGING = {
             'level': 'INFO',
             'class': 'watchtower.CloudWatchLogsHandler',
             'boto3_session': boto3.Session(),
-            'log_group': 'django-dynamo-admin',
+            'log_group': 'django-dynamodb-backend',
             'stream_name': 'django-app',
             'formatter': 'aws',
         },
     },
     'loggers': {
-        'dynamodb_adapter': {
+        'django_dynamodb_backend': {
             'handlers': ['watchtower'],
             'level': 'INFO',
         },
@@ -1123,12 +1131,14 @@ LOGGING = {
 
 ### 2. Health Checks
 
+Below is an example health check that verifies DynamoDB connectivity. Adapt the model import to match your project.
+
 ```python
 # health/views.py
 from django.http import JsonResponse, HttpResponse
 from django.views.generic import View
 import boto3
-from django_dynamodb_backend.models import Book
+from myapp.models import MyModel  # Use your own model here
 
 class HealthCheckView(View):
     """Comprehensive health check endpoint."""
@@ -1152,13 +1162,13 @@ class HealthCheckView(View):
         """Check DynamoDB connectivity."""
         try:
             # Simple count query to test connectivity
-            Book.objects.count()
+            MyModel.objects.count()
             return True
         except Exception:
             return False
     
     def check_cache(self):
-        """Check Redis connectivity."""
+        """Check cache connectivity."""
         try:
             from django.core.cache import cache
             cache.set('health_check', 'ok', 10)
@@ -1188,7 +1198,7 @@ newrelic==8.8.0
 # newrelic.ini
 [newrelic]
 license_key = YOUR_LICENSE_KEY
-app_name = Django DynamoDB Admin
+app_name = Django DynamoDB Backend
 monitor_mode = true
 log_level = info
 ```

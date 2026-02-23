@@ -7,7 +7,7 @@ We welcome contributions! This document provides guidelines for contributing to 
 ### Prerequisites
 
 - Python 3.11+
-- Django 5.2+ or Django 6.0+
+- Django 5.2+
 - Docker and Docker Compose (for LocalStack DynamoDB)
 
 ### Development Setup

@@ -26,20 +26,21 @@ pip install -e ".[dev]"
 
 ### Install DynamoDB Local (Development)
 
-```bash
-# Download DynamoDB Local
-wget https://s3.us-west-2.amazonaws.com/dynamodb-local/dynamodb_local_latest.tar.gz
-tar -xzf dynamodb_local_latest.tar.gz
-
-# Start DynamoDB Local
-java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -sharedDb
-```
-
-Or use Docker:
+#### Option A: LocalStack (Recommended)
 
 ```bash
-docker run -p 8000:8000 amazon/dynamodb-local -jar DynamoDBLocal.jar -sharedDb -dbPath ./data
+docker run -d -p 4566:4566 localstack/localstack
 ```
+
+LocalStack runs on port `4566` and is used throughout this project's documentation and demo.
+
+#### Option B: DynamoDB Local
+
+```bash
+docker run -d -p 8000:8000 amazon/dynamodb-local -jar DynamoDBLocal.jar -sharedDb -dbPath ./data
+```
+
+If using DynamoDB Local, change `endpoint_url` in your settings to `http://localhost:8000`.
 
 ## Step 2: Django Configuration
 
@@ -311,7 +312,7 @@ print("Fiction books:", Book.objects.filter(genre='fiction'))
 
 1. Create a superuser:
 ```bash
-python manage.py createsuperuser
+python manage.py dynamodb_createsuperuser
 ```
 
 2. Start the development server:
@@ -409,10 +410,9 @@ python manage.py test myapp --settings=test_settings
 
 ## Next Steps
 
-- **Tutorial 2**: Advanced Relationships and Queries
-- **Tutorial 3**: Custom Admin Actions and Bulk Operations
-- **Tutorial 4**: Performance Optimization and Caching
-- **Tutorial 5**: Production Deployment
+- **[Tutorial 2](tutorial_02_advanced_queries.md)**: Advanced Relationships and Queries
+- **[Feature Walkthrough](../docs/FEATURE_WALKTHROUGH.md)**: Custom admin actions, GSI optimization, and more
+- **[Deployment Guide](../docs/DEPLOYMENT_GUIDE.md)**: Production deployment and monitoring
 
 ## Common Issues and Solutions
 
@@ -426,6 +426,10 @@ lsof -i :8000  # Check if port is in use
 ### Issue: Migration fails
 **Solution**: Check AWS credentials and table permissions:
 ```bash
+# If using LocalStack (recommended):
+aws dynamodb list-tables --endpoint-url http://localhost:4566
+
+# If using DynamoDB Local:
 aws dynamodb list-tables --endpoint-url http://localhost:8000
 ```
 

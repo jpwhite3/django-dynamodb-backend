@@ -137,6 +137,7 @@ flowchart LR
 | `dynamodb_makemigrations` | Create migrations | [API Reference](API_REFERENCE.md#management-commands) |
 | `dynamodb_showmigrations` | Show migration status | [API Reference](API_REFERENCE.md#management-commands) |
 | `dynamodb_rollback` | Rollback migrations | [API Reference](API_REFERENCE.md#management-commands) |
+| `dynamodb_performance` | Monitor performance metrics | [API Reference](API_REFERENCE.md#management-commands) |
 
 ### Key Settings
 

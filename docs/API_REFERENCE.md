@@ -1,6 +1,6 @@
-# DynamoDB Django Admin - API Reference
+# Django DynamoDB Backend - API Reference
 
-This document provides detailed API reference for all components of the DynamoDB Django Admin system.
+This document provides detailed API reference for all components of the Django DynamoDB Backend.
 
 ## Table of Contents
 
@@ -848,54 +848,7 @@ RunPython(code_func, reverse_code_func=None)
 - `code_func`: Function or code string to execute
 - `reverse_code_func`: Reverse function or code string
 
-### Management Commands
-
-#### `dynamodb_migrate`
-
-Applies DynamoDB migrations.
-
-```bash
-python manage.py dynamodb_migrate [app_label] [migration_name]
-```
-
-**Options:**
-- `--fake`: Mark migrations as applied without executing
-- `--list`: Show migration status
-- `--plan`: Show migration plan without executing
-
-#### `dynamodb_makemigrations`
-
-Creates new migration files.
-
-```bash
-python manage.py dynamodb_makemigrations app_label
-```
-
-**Options:**
-- `--name NAME`: Custom migration name
-- `--empty`: Create empty migration
-- `--create-table MODEL`: Create table operation for model
-- `--data-migration`: Create data migration template
-
-#### `dynamodb_rollback`
-
-Rollback to a specific migration.
-
-```bash
-python manage.py dynamodb_rollback app_label migration_name
-```
-
-#### `dynamodb_showmigrations`
-
-Show migration status.
-
-```bash
-python manage.py dynamodb_showmigrations [app_label]
-```
-
-**Options:**
-- `--verbose`: Show detailed information
-- `--format {table,json}`: Output format
+See the [Management Commands](#management-commands) section below for `dynamodb_migrate`, `dynamodb_makemigrations`, `dynamodb_rollback`, and `dynamodb_showmigrations`.
 
 ---
 
@@ -976,7 +929,7 @@ class DynamoDBTextSearchFilter(DynamoDBListFilter)
 
 ### DynamoDBModelForm
 
-Enhanced ModelForm for DynamoDB models.
+Enhanced ModelForm for DynamoDB models. `DynamoDBFormMixin` provides DynamoDB-specific validation (primary key constraints, item size limits, data type checks) and is automatically included via `DynamoDBModelForm`.
 
 ```python
 class DynamoDBModelForm(DynamoDBFormMixin, forms.ModelForm)
@@ -1244,6 +1197,33 @@ Rollback to a specific DynamoDB migration.
 ```bash
 python manage.py dynamodb_rollback app_label migration_name
 ```
+
+### dynamodb_createsuperuser
+
+Create a superuser in DynamoDB interactively (similar to Django's `createsuperuser`).
+
+```bash
+python manage.py dynamodb_createsuperuser
+```
+
+**Options:**
+- `--username`: Username for the superuser
+- `--email`: Email for the superuser
+- `--password`: Password (only with `--noinput`)
+- `--noinput`: Non-interactive mode (requires `--username` and `--password`)
+
+### dynamodb_performance
+
+Monitor DynamoDB performance metrics (connection pool, query cache, query times).
+
+```bash
+python manage.py dynamodb_performance
+```
+
+**Options:**
+- `--format {table,json}`: Output format (default: `table`)
+- `--reset`: Reset performance metrics after displaying
+- `--watch SECONDS`: Watch mode — refresh every N seconds
 
 ---
 

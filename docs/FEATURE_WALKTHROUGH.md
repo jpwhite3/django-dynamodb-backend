@@ -1,12 +1,12 @@
-# 🎯 Django DynamoDB Admin - Feature Walkthrough
+# Django DynamoDB Backend - Feature Walkthrough
 
-**A hands-on guide to every enhanced feature with real examples and code.**
+**A hands-on guide to features with real examples and code.**
 
-This comprehensive walkthrough demonstrates all the advanced features that make Django DynamoDB Admin the most powerful Django-NoSQL integration available.
+This walkthrough demonstrates the features of Django DynamoDB Backend. Some advanced features (marked with *Planned*) represent the design direction and may not yet be fully implemented.
 
 ---
 
-## 🎮 Interactive Demo Features
+## Interactive Demo Features
 
 Before diving into individual features, start with our interactive demo to see everything in action:
 
@@ -22,7 +22,7 @@ The demo runs **entirely on DynamoDB** - no PostgreSQL, Redis, or SQLite require
 
 ---
 
-## 🌟 DynamoDB-Only Mode (NEW)
+## DynamoDB-Only Mode
 
 Run Django entirely on DynamoDB without any relational database. This is ideal for serverless deployments on AWS Lambda.
 
@@ -39,8 +39,11 @@ DYNAMODB_SESSION_TABLE_NAME = 'django_sessions'
 ```python
 # settings.py
 INSTALLED_APPS = [
+    'django.contrib.auth',           # Required for admin
+    'django.contrib.sessions',       # Required for session middleware
+    # ... other standard Django apps
+    'django_dynamodb_backend',
     'django_dynamodb_backend.contrib.auth_dynamo',
-    # ... other apps (NOT django.contrib.auth)
 ]
 
 AUTH_USER_MODEL = 'auth_dynamo.DynamoUser'
@@ -78,7 +81,7 @@ python manage.py runserver
 
 ---
 
-## 📊 1. Enhanced Django Admin Integration
+## 1. Enhanced Django Admin Integration
 
 ### 1.1 Standard Django Admin Features (100% Compatible)
 
@@ -136,7 +139,7 @@ class BlogPostAdmin(DynamoDBAdmin):
 
 ---
 
-## 🔧 2. Admin Inlines with DynamoDB Batch Operations
+## 2. Admin Inlines with DynamoDB Batch Operations
 
 ### 2.1 Tabular Inlines
 
@@ -229,7 +232,7 @@ class DynamoDBInlineFormSet(BaseInlineFormSet):
 
 ---
 
-## ⚡ 3. GSI (Global Secondary Index) Optimization
+## 3. GSI (Global Secondary Index) Optimization
 
 ```mermaid
 flowchart TD
@@ -349,7 +352,7 @@ query_patterns = {
 
 ---
 
-## 📄 4. Advanced Pagination with Token Management
+## 4. Advanced Pagination with Token Management
 
 ### 4.1 Bidirectional Navigation
 
@@ -453,7 +456,7 @@ class PaginationToken:
 
 ---
 
-## 🔍 5. Smart Autocomplete for Relationships
+## 5. Smart Autocomplete for Relationships
 
 ### 5.1 DynamoDB-Optimized Autocomplete
 
@@ -475,7 +478,7 @@ class BlogPostAdmin(DynamoDBAutocompleteMixin, DynamoDBAdmin):
             # Use name-index GSI for fast author search
             queryset = queryset.filter(
                 name__icontains=search_term
-            ).using_gsi('name-index')
+            )  # GSI 'name-index' selected automatically
             
         elif model == BlogCategory:
             # Use prefix search for hierarchical categories
@@ -539,7 +542,7 @@ class DynamoDBAutocompleteView(View):
 
 ---
 
-## 🎬 6. Advanced Admin Actions with Confirmations
+## 6. Advanced Admin Actions with Confirmations
 
 ### 6.1 Bulk Operations with Cost Estimation
 
@@ -649,7 +652,7 @@ def bulk_update_with_confirmation(self, request, queryset):
 
 ---
 
-## 📊 7. Performance Monitoring Dashboard
+## 7. Performance Monitoring Dashboard (*Planned*)
 
 ### 7.1 Real-Time Metrics
 
@@ -717,7 +720,7 @@ def performance_dashboard(request):
 ```
 
 **Demo**: 
-1. Visit http://localhost:8003/ (Performance Dashboard)
+1. Run `python manage.py dynamodb_performance` to view metrics in the terminal
 2. See real-time connection pool utilization
 3. View cache hit rates and performance
 4. Check GSI usage recommendations
@@ -795,7 +798,7 @@ class PerformanceMonitor:
 
 ---
 
-## 🔐 8. Security and Audit Features
+## 8. Security and Audit Features
 
 ### 8.1 Audit Logging
 
@@ -902,7 +905,7 @@ class CustomerAdmin(SecureDynamoDBAdmin):
 
 ---
 
-## 🚀 9. Migration System for DynamoDB
+## 9. Migration System for DynamoDB
 
 ### 9.1 Table Structure Management
 
@@ -1017,7 +1020,9 @@ class Migration(DynamoDBMigration):
 
 ---
 
-## 🎯 10. Advanced Query Patterns
+## 10. Advanced Query Patterns
+
+> **Note:** The examples below show the GSI optimizer automatically selecting the best index based on query filters and configured GSIs. Explicit GSI selection via a `.using_gsi()` queryset method is planned for a future release.
 
 ### 10.1 Complex Filtering with GSI
 
@@ -1044,7 +1049,7 @@ class AdvancedQueryAdmin(DynamoDBAdmin):
                     published_date__gte=thirty_days_ago
                 ).filter(
                     view_count__gte=1000
-                ).using_gsi('published-date-index')
+                )  # Uses 'published-date-index' GSI automatically
             
             elif filter_type == 'trending_by_category':
                 category = request.GET.get('category', 'tech')
@@ -1052,7 +1057,7 @@ class AdvancedQueryAdmin(DynamoDBAdmin):
                 return qs.filter(
                     category=category,
                     view_count__gte=500
-                ).order_by('-view_count').using_gsi('category-engagement-index')
+                ).order_by('-view_count')  # Uses 'category-engagement-index' GSI
         
         return qs
     
@@ -1064,20 +1069,20 @@ class AdvancedQueryAdmin(DynamoDBAdmin):
             tag = search_term[1:]
             queryset = queryset.filter(
                 tags__contains=tag
-            ).using_gsi('tag-index')
+            )  # Uses 'tag-index' GSI if configured
         
         # Author search
         elif search_term.startswith('@'):
             author = search_term[1:]
             queryset = queryset.filter(
                 author__icontains=author
-            ).using_gsi('author-date-index')
+            )  # Uses 'author-date-index' GSI if configured
         
         # Full-text search
         else:
             queryset = queryset.filter(
                 content__icontains=search_term
-            ).using_gsi('search-index')
+            )  # Falls back to scan if no matching GSI
         
         return queryset, False
 ```
@@ -1112,7 +1117,7 @@ class AnalyticsAdmin(DynamoDBAdmin):
         for status in ['draft', 'published', 'archived']:
             count = self.model.objects.filter(
                 status=status
-            ).using_gsi('status-index').count()
+            ).count()  # Uses 'status-index' GSI automatically
             status_counts[status] = count
         
         # Category distribution using category GSI
@@ -1120,7 +1125,7 @@ class AnalyticsAdmin(DynamoDBAdmin):
         for category in ['tech', 'lifestyle', 'business']:
             posts = self.model.objects.filter(
                 category=category
-            ).using_gsi('category-date-index')
+            )  # Uses 'category-date-index' GSI automatically
             
             category_stats[category] = {
                 'count': posts.count(),
@@ -1139,7 +1144,7 @@ class AnalyticsAdmin(DynamoDBAdmin):
 
 ---
 
-## 📈 Performance Benchmarks
+## Performance Benchmarks
 
 Our testing shows significant performance improvements:
 
@@ -1202,7 +1207,7 @@ make demo-large
 
 ---
 
-## 🎉 Putting It All Together
+## Putting It All Together
 
 ### Complete Example: E-commerce Admin
 
@@ -1290,13 +1295,13 @@ class OrderAdmin(
         if request.GET.get('customer_email'):
             return qs.filter(
                 customer_email=request.GET['customer_email']
-            ).using_gsi('customer-date-index').order_by('-order_date')
+            ).order_by('-order_date')  # Uses 'customer-date-index' GSI
         
         # Status-based filtering
         if request.GET.get('status'):
             return qs.filter(
                 status=request.GET['status']
-            ).using_gsi('status-date-index').order_by('-order_date')
+            ).order_by('-order_date')  # Uses 'status-date-index' GSI
         
         return qs.order_by('-order_date')
     
@@ -1350,7 +1355,7 @@ This example demonstrates:
 
 ---
 
-## 🚀 Next Steps
+## Next Steps
 
 Now that you've seen all the features in action:
 
@@ -1370,6 +1375,8 @@ Now that you've seen all the features in action:
 | `dynamodb_makemigrations` | Create new migrations |
 | `dynamodb_showmigrations` | Show migration status |
 | `dynamodb_rollback` | Rollback to a specific migration |
+| `dynamodb_createsuperuser` | Create a superuser interactively |
+| `dynamodb_performance` | Monitor DynamoDB performance metrics |
 
 **Django DynamoDB Backend provides enterprise-grade functionality that scales with your needs while maintaining the familiar Django experience you love - now with full DynamoDB-only support for serverless deployments.**
 

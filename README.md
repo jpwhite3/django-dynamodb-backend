@@ -97,7 +97,7 @@ python -m pytest tests/
 ## Installation
 
 ```bash
-# Clone the repository
+# Clone the repository (not yet available on PyPI)
 git clone https://github.com/jpwhite3/django-dynamodb-backend.git
 cd django-dynamodb-backend
 
@@ -117,9 +117,9 @@ Run Django entirely on DynamoDB — ideal for serverless deployments:
 # settings.py
 INSTALLED_APPS = [
     'django.contrib.admin',
-    'django.contrib.auth',
+    'django.contrib.auth',           # Required for admin
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
+    'django.contrib.sessions',       # Required for session middleware
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # DynamoDB backend
@@ -253,6 +253,8 @@ class BlogPostAdmin(DynamoDBAdmin):
 | `dynamodb_makemigrations` | Create new migrations |
 | `dynamodb_showmigrations` | Show migration status |
 | `dynamodb_rollback` | Rollback migrations |
+| `dynamodb_createsuperuser` | Create a superuser interactively |
+| `dynamodb_performance` | Monitor DynamoDB performance metrics |
 
 ---
 

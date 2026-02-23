@@ -63,7 +63,7 @@ flowchart LR
 
 ## Step 1: Install the Backend
 
-### Option A: From Source (Recommended for Now)
+### From Source (Not Yet on PyPI)
 
 ```bash
 git clone https://github.com/jpwhite3/django-dynamodb-backend.git
@@ -71,9 +71,7 @@ cd django-dynamodb-backend
 pip install -e .
 ```
 
-### Option B: Add to Your Project
-
-Copy the `src/django_dynamodb_backend` directory to your project.
+> **Note:** This package is not yet published to PyPI. Install from source as shown above.
 
 ### Install Dependencies
 
@@ -135,7 +133,7 @@ Your models use DynamoDB, but Django's built-in apps (auth, sessions) use SQLite
 - Projects with complex user permissions
 - When you need Django's full Group/Permission models
 
-**This tutorial covers Mode A (DynamoDB-Only).** For hybrid mode, skip the sessions/auth configuration.
+**This tutorial covers Mode A (DynamoDB-Only).** For hybrid mode, skip the sessions and auth configuration in Steps 3.3 and 3.4 — keep Django's default `SESSION_ENGINE` and `AUTH_USER_MODEL`, and omit `django_dynamodb_backend.contrib.auth_dynamo` from `INSTALLED_APPS`. Your DynamoDB models will still work alongside a relational database for Django's built-in apps.
 
 ---
 
@@ -356,9 +354,11 @@ class Article(DynamoDBModel):
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        table_name = 'articles'  # Explicit table name
+        db_table = 'articles'  # Explicit table name
         
-        # Optional: Add GSIs for efficient queries
+        # Optional: Define GSIs for efficient queries.
+        # Note: These are used by the migration system (dynamodb_makemigrations)
+        # to generate CreateTable operations with the specified indexes.
         global_secondary_indexes = [
             {
                 'index_name': 'author-date-index',
@@ -387,7 +387,7 @@ class Article(DynamoDBModel):
 | `ForeignKey` | `CharField` storing ID | No joins in DynamoDB |
 | `ManyToManyField` | `JSONField` (list) or separate table | Store IDs in a list |
 | `ordering` in Meta | Manual ordering or GSI | Use GSI for sort |
-| `db_table` | `table_name` | Meta option name |
+| `db_table` | `db_table` | Same Meta option, used by both |
 
 ### Field Type Mapping
 
@@ -399,8 +399,12 @@ from django.db import models
 
 models.CharField      # → DynamoDB String (S)
 models.TextField      # → DynamoDB String (S)
+models.EmailField     # → DynamoDB String (S)
+models.URLField       # → DynamoDB String (S)
+models.SlugField      # → DynamoDB String (S)
 models.IntegerField   # → DynamoDB Number (N)
 models.FloatField     # → DynamoDB Number (N)
+models.DecimalField   # → DynamoDB Number (N) — stored as float
 models.BooleanField   # → DynamoDB Boolean (BOOL)
 models.DateTimeField  # → DynamoDB String (S) / UTCDateTime
 models.DateField      # → DynamoDB String (S) ISO format
@@ -438,12 +442,12 @@ class Comment(models.Model):
 
 # After
 class Comment(DynamoDBModel):
-    id = CharField(max_length=36, primary_key=True)
-    article_id = CharField(max_length=36)  # Store the article ID
-    content = TextField()
+    id = models.CharField(max_length=36, primary_key=True)
+    article_id = models.CharField(max_length=36)  # Store the article ID
+    content = models.TextField()
     
     class Meta:
-        table_name = 'comments'
+        db_table = 'comments'
         global_secondary_indexes = [
             {
                 'index_name': 'article-index',
@@ -477,8 +481,9 @@ class Article(DynamoDBModel):
     
     def add_tag(self, tag):
         if self.tag_ids is None:
-            self.tag_ids = set()
-        self.tag_ids.add(tag.id)
+            self.tag_ids = []
+        if tag.id not in self.tag_ids:
+            self.tag_ids.append(tag.id)
         self.save()
 ```
 
@@ -619,7 +624,7 @@ def migrate_articles():
             content=old.content,
             author_id=str(old.author_id),
             category_id=str(old.category_id) if old.category_id else None,
-            tags=set(old.tags.values_list('id', flat=True)),
+            tags=list(old.tags.values_list('id', flat=True)),
             published=old.published,
             view_count=old.view_count,
             created_at=old.created_at,
@@ -688,16 +693,21 @@ batch_migrate(
 import uuid
 
 class MyModel(DynamoDBModel):
-    id = CharField(max_length=36, primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = models.CharField(max_length=36, primary_key=True, default=lambda: str(uuid.uuid4()))
 ```
 
 ### Pattern 2: Composite Keys (Partition + Sort)
 
 ```python
 class UserPost(DynamoDBModel):
-    user_id = CharField(max_length=36, primary_key=True)  # Partition key
-    post_id = CharField(max_length=36, sort_key=True)     # Sort key
-    title = CharField(max_length=200)
+    user_id = models.CharField(max_length=36, primary_key=True)  # Partition key
+    post_id = models.CharField(max_length=36)  # Sort key (defined at table level)
+    title = models.CharField(max_length=200)
+    
+    class Meta:
+        db_table = 'user_posts'
+        # Sort keys are configured via table creation options or
+        # global_secondary_indexes, not as a field parameter.
     
     # Query all posts by a user (very efficient!)
     # UserPost.objects.filter(user_id='123')
@@ -708,12 +718,12 @@ class UserPost(DynamoDBModel):
 ```python
 # Model with GSI
 class Article(DynamoDBModel):
-    id = CharField(primary_key=True)
-    author_id = CharField(max_length=36)
-    created_at = DateTimeField(auto_now_add=True)
+    id = models.CharField(max_length=36, primary_key=True)
+    author_id = models.CharField(max_length=36)
+    created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        table_name = 'articles'
+        db_table = 'articles'
         global_secondary_indexes = [
             {
                 'index_name': 'author-date-index',
@@ -742,8 +752,8 @@ Article.objects.filter(pk='article-123').update(
 
 ```python
 class Article(DynamoDBModel):
-    id = CharField(primary_key=True)
-    author_id = CharField(max_length=36)
+    id = models.CharField(max_length=36, primary_key=True)
+    author_id = models.CharField(max_length=36)
     
     @property
     def author(self):

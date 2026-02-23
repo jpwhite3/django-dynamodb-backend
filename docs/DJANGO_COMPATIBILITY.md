@@ -193,12 +193,13 @@ Model.objects.filter(pk=1).update(stock=DynamoDBF('stock') - 5)
 
 # Check if operation is atomic
 f_expr = DynamoDBF('counter') + 10
-f_expr.is_atomic()  # True
+f_expr.is_atomic  # True (property, not a method call)
 
 # Get DynamoDB update expression components
-expr, values = f_expr.get_update_expression()
-# expr: 'ADD #counter :val'
-# values: {':val': 10}
+update_expr, attr_names, attr_values = f_expr.get_update_expression()
+# update_expr: 'SET #counter = #counter + :delta'
+# attr_names: {'#counter': 'counter'}
+# attr_values: {':delta': Decimal('10')}
 ```
 
 ### Non-Atomic Operations
@@ -208,7 +209,7 @@ Multiply and divide are supported but NOT atomic (require read-modify-write):
 ```python
 # WARNING: These are NOT atomic!
 f_expr = DynamoDBF('price') * 1.1  # 10% increase
-f_expr.is_atomic()  # False - logged as warning
+f_expr.is_atomic  # False - logged as warning
 
 # For non-atomic operations, apply manually:
 instance = Model.objects.get(pk=1)
@@ -244,9 +245,9 @@ class MyModelAdmin(DynamoDBAdmin):
     search_fields = ['name']
     date_hierarchy = 'created_at'  # Works with DynamoDB!
     
-    # Optional: Override DynamoDB-specific table settings
+    # Optional: Specify custom DynamoDB table name
     class Meta:
-        dynamodb_table_name = 'my-custom-table'
+        db_table = 'my-custom-table'
 ```
 
 ### Date Hierarchy Support
@@ -275,10 +276,14 @@ from django_dynamodb_backend.admin import DynamoDBAdminLoggingMixin
 class MyModelAdmin(DynamoDBAdminLoggingMixin, admin.ModelAdmin):
     pass
 
-# Logs to both Django's LogEntry and Python logging:
+# Logs to Python logging and attempts to write Django's LogEntry:
 # - log_addition(): Records object creation
 # - log_change(): Records object modification  
 # - log_deletion(): Records object deletion
+#
+# In DynamoDB-only mode, LogEntry writes are silently skipped
+# (no relational database). Use Python logging or CloudWatch
+# for audit trails.
 ```
 
 ## Model Definition
@@ -294,7 +299,7 @@ class MyModel(DynamoDBModel):
     status = models.CharField(max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     
-    objects = DynamoDBManager()
+    # objects = DynamoDBManager() is inherited from DynamoDBModel
     
     class Meta:
         # Optional: Specify custom table name
@@ -307,14 +312,19 @@ class MyModel(DynamoDBModel):
 |-------------|---------------|
 | `CharField` | String (S) |
 | `TextField` | String (S) |
+| `EmailField` | String (S) |
+| `URLField` | String (S) |
+| `SlugField` | String (S) |
 | `IntegerField` | Number (N) |
 | `FloatField` | Number (N) |
-| `DecimalField` | Number (N) |
+| `DecimalField` | Number (N) — stored as float; see note |
 | `BooleanField` | Boolean (BOOL) |
 | `DateField` | String (S) - ISO format |
 | `DateTimeField` | String (S) - ISO format |
 | `JSONField` | Map (M) or List (L) |
 | `UUIDField` | String (S) |
+
+> **DecimalField precision:** Values are converted to `float` for DynamoDB storage, which may lose precision for values requiring exact decimal representation (e.g. currency). If exact precision is critical, consider storing values as strings and converting in application code.
 
 ## Performance Considerations
 
@@ -452,7 +462,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',  # Required for admin
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
+    'django.contrib.sessions',  # Required for session middleware
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # DynamoDB integration
@@ -563,7 +573,7 @@ Using Pay-per-request billing mode keeps costs minimal for low-traffic apps:
 1. **No SQL migrations**: Don't run `migrate` for auth/sessions tables
 2. **Groups**: Basic string-based implementation (no full Group model)
 3. **Permissions**: Stored as comma-separated strings, not FK relationships
-4. **Admin logs**: Use Python logging instead of LogEntry model
+4. **Admin logs**: LogEntry writes are silently skipped; use Python logging or CloudWatch
 
 ---
 

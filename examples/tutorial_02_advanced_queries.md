@@ -21,7 +21,7 @@ import uuid
 class Author(DynamoDBModel):
     """Author model with biographical information."""
     
-    id = models.AutoField(primary_key=True)
+    id = models.CharField(max_length=36, primary_key=True, default=lambda: str(uuid.uuid4()))
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     birth_date = models.DateField(null=True, blank=True)
@@ -91,7 +91,7 @@ class Book(DynamoDBModel):
     title = models.CharField(max_length=200)
     
     # Relationship fields (denormalized)
-    author_id = models.IntegerField()  # Reference to Author
+    author_id = models.CharField(max_length=36)  # Reference to Author
     author_name = models.CharField(max_length=100)  # Denormalized for performance
     
     publisher_name = models.CharField(max_length=100)  # Reference to Publisher
@@ -186,7 +186,7 @@ class Book(DynamoDBModel):
 class BookReview(DynamoDBModel):
     """Book review model."""
     
-    id = models.AutoField(primary_key=True)
+    id = models.CharField(max_length=36, primary_key=True, default=lambda: str(uuid.uuid4()))
     book_isbn = models.CharField(max_length=13, db_index=True)
     
     # Reviewer info
@@ -231,7 +231,7 @@ class BookReview(DynamoDBModel):
 class ReadingList(DynamoDBModel):
     """User reading lists/collections."""
     
-    id = models.AutoField(primary_key=True)
+    id = models.CharField(max_length=36, primary_key=True, default=lambda: str(uuid.uuid4()))
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     
@@ -257,8 +257,8 @@ class ReadingList(DynamoDBModel):
 class ReadingListItem(DynamoDBModel):
     """Items in a reading list."""
     
-    id = models.AutoField(primary_key=True)
-    reading_list_id = models.IntegerField()
+    id = models.CharField(max_length=36, primary_key=True, default=lambda: str(uuid.uuid4()))
+    reading_list_id = models.CharField(max_length=36)
     book_isbn = models.CharField(max_length=13)
     
     # Item-specific data
@@ -281,6 +281,9 @@ class ReadingListItem(DynamoDBModel):
     )
     
     class Meta:
+        # Note: unique_together is not enforced by DynamoDB.
+        # Uniqueness must be handled in application code or by
+        # using a composite partition key.
         unique_together = ['reading_list_id', 'book_isbn']
     
     def __str__(self):
@@ -513,6 +516,8 @@ class ReviewQueryService:
 ```
 
 ### Pagination and Performance
+
+> **Note:** The `django_dynamodb_backend` package includes a built-in `DynamoDBPaginator` (see [API Reference](../docs/API_REFERENCE.md#dynamodbpaginator)) that handles token-based pagination for you. The example below shows the underlying concepts for learning purposes.
 
 ```python
 # myapp/pagination.py
@@ -802,8 +807,8 @@ In this tutorial, we've covered:
 
 ## Next Steps
 
-- **Tutorial 3**: Custom Admin Actions and Bulk Operations
-- **Tutorial 4**: Real-time Updates and WebSocket Integration  
-- **Tutorial 5**: Production Deployment and Monitoring
+- **[Feature Walkthrough](../docs/FEATURE_WALKTHROUGH.md)**: Custom admin actions, bulk operations, GSI optimization
+- **[Deployment Guide](../docs/DEPLOYMENT_GUIDE.md)**: Production deployment and monitoring
+- **[Django Compatibility Guide](../docs/DJANGO_COMPATIBILITY.md)**: Full feature support matrix
 
 The key to success with DynamoDB is understanding its strengths (scale, performance) and designing your data model and queries accordingly. Unlike traditional relational databases, DynamoDB requires more upfront design thinking but provides excellent performance at scale.
