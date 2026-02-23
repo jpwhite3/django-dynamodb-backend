@@ -306,9 +306,6 @@ class SQLInsertCompiler(compiler.SQLInsertCompiler):
     Compiler for INSERT operations in DynamoDB.
     """
 
-    def __init__(self, query, connection, using, return_id=False):
-        super().__init__(query, connection, using, return_id)
-
     def as_sql(self):
         """
         Convert INSERT operation to DynamoDB PutItem.
@@ -356,9 +353,6 @@ class SQLUpdateCompiler(compiler.SQLUpdateCompiler):
     Compiler for UPDATE operations in DynamoDB.
     """
 
-    def __init__(self, query, connection, using):
-        super().__init__(query, connection, using)
-
     def as_sql(self):
         """
         Convert UPDATE operation to DynamoDB UpdateItem.
@@ -387,9 +381,6 @@ class SQLDeleteCompiler(compiler.SQLDeleteCompiler):
     Compiler for DELETE operations in DynamoDB.
     """
 
-    def __init__(self, query, connection, using):
-        super().__init__(query, connection, using)
-
     def as_sql(self):
         """
         Convert DELETE operation to DynamoDB DeleteItem.
@@ -407,9 +398,6 @@ class SQLAggregateCompiler(compiler.SQLAggregateCompiler):
     """
     Compiler for aggregate operations in DynamoDB.
     """
-
-    def __init__(self, query, connection, using, elide_empty=True):
-        super().__init__(query, connection, using, elide_empty)
 
     def as_sql(self):
         """

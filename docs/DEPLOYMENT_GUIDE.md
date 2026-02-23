@@ -646,7 +646,7 @@ ExecStart=/opt/venvs/django-dynamo-admin/bin/gunicorn \
     --timeout 120 \
     --max-requests 1000 \
     --max-requests-jitter 50 \
-    django_dynamo_admin.wsgi:application
+    django_dynamodb_backend.wsgi:application
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed
 TimeoutStopSec=5
@@ -748,7 +748,7 @@ USER appuser
 RUN python manage.py collectstatic --noinput --settings=settings.production
 
 # Run gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "django_dynamo_admin.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "django_dynamodb_backend.wsgi:application"]
 
 EXPOSE 8000
 ```
@@ -1020,10 +1020,10 @@ def cached_queryset(queryset, timeout=300):
 # settings/production.py (DynamoDB optimization)
 DATABASES = {
     'default': {
-        'ENGINE': 'django_dynamo_admin.database',
+        'ENGINE': 'django_dynamodb_backend.db',
         'NAME': 'production_database',
-        'REGION': 'us-east-1',
         'OPTIONS': {
+            'region_name': 'us-east-1',
             'max_pool_connections': 50,
             'retries': {
                 'max_attempts': 3,
@@ -1348,7 +1348,7 @@ class RateLimitMiddleware:
 # Increase timeout values
 DATABASES = {
     'default': {
-        'ENGINE': 'django_dynamo_admin.database',
+        'ENGINE': 'django_dynamodb_backend.db',
         'OPTIONS': {
             'connect_timeout': 60,
             'read_timeout': 60,

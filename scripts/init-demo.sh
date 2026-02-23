@@ -48,7 +48,7 @@ echo "╔═══════════════════════�
 echo "║                    🎉 Demo Ready!                            ║"
 echo "╠══════════════════════════════════════════════════════════════╣"
 echo "║                                                              ║"
-echo "║  Django Admin:  http://localhost:8000/admin/                 ║"
+echo "║  Django Admin:  http://localhost:8001/admin/                 ║"
 echo "║                                                              ║"
 echo "║  Login Credentials:                                          ║"
 echo "║    Username: admin                                           ║"

@@ -212,6 +212,7 @@ class TestManagementCommandsIntegration(TestCase):
             with patch("django.apps.apps.get_app_config") as mock_get_app_config:
                 mock_app_config = MagicMock()
                 mock_app_config.path = temp_dir
+                mock_app_config.name = "test_app"
                 mock_get_app_config.return_value = mock_app_config
 
                 # Test command execution
@@ -222,8 +223,16 @@ class TestManagementCommandsIntegration(TestCase):
                     migrations_dir = Path(temp_dir) / "dynamodb_migrations"
                     self.assertTrue(migrations_dir.exists())
 
-                    migration_files = list(migrations_dir.glob("*.py"))
-                    self.assertTrue(len(migration_files) > 0)
+                    # Find actual migration file (not __init__.py)
+                    migration_files = [
+                        f
+                        for f in migrations_dir.glob("*.py")
+                        if f.name != "__init__.py"
+                    ]
+                    self.assertTrue(
+                        len(migration_files) > 0,
+                        f"No migration files found in {list(migrations_dir.glob('*.py'))}",
+                    )
 
                     # Check migration file content
                     migration_file = migration_files[0]
@@ -231,9 +240,9 @@ class TestManagementCommandsIntegration(TestCase):
                     self.assertIn("DynamoDBMigration", content)
                     self.assertIn("operations = [", content)
 
-                except CommandError:
+                except CommandError as e:
                     # Command might not be properly registered in test environment
-                    pass
+                    self.fail(f"Command failed: {e}")
 
     def test_dynamodb_migrate_command_list(self):
         """Test dynamodb_migrate command with --list option."""

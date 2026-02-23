@@ -58,7 +58,7 @@ jobs:
     - name: Install package
       run: |
         pip install dist/*.whl
-        python -c "import dynamodb_adapter; print('Import successful')"
+        python -c "import django_dynamodb_backend; print('Import successful')"
 
   publish-testpypi:
     name: Publish to TestPyPI

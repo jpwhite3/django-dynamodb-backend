@@ -53,7 +53,7 @@ repos:
         additional_dependencies:
           - django-stubs
           - boto3-stubs
-        files: ^django_dynamo_admin/dynamodb_adapter/
+        files: ^src/django_dynamodb_backend/
 
   # Security checks
   - repo: https://github.com/PyCQA/bandit
@@ -61,7 +61,7 @@ repos:
     hooks:
       - id: bandit
         args: ['-ll', '-x', 'tests,**/tests/**']
-        files: ^django_dynamo_admin/
+        files: ^src/django_dynamodb_backend/
 
   # Dockerfile linting
   - repo: https://github.com/hadolint/hadolint

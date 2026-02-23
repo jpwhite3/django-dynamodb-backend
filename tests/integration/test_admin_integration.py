@@ -12,12 +12,62 @@ from django.test import RequestFactory, TestCase, override_settings
 from django.utils import timezone
 from moto import mock_aws
 
-from django_dynamodb_backend.admin import (
-    ChoiceAdmin,
-    DynamoDBAdmin,
-    QuestionAdmin,
-)
+from django.contrib import messages
+
+from django_dynamodb_backend.admin import DynamoDBAdmin
 from django_dynamodb_backend.models import Choice, MyModel, Question
+
+
+# Test-local admin classes (removed from library admin.py)
+class QuestionAdmin(DynamoDBAdmin):
+    list_display = ["question_text", "pub_date", "was_published_recently"]
+    list_filter = ["pub_date"]
+    search_fields = ["question_text"]
+    date_hierarchy = "pub_date"
+    empty_value_display = "-empty-"
+    fieldsets = [
+        (None, {"fields": ["question_text"]}),
+        ("Date information", {"fields": ["pub_date"]}),
+    ]
+    list_per_page = 20
+    actions = DynamoDBAdmin.actions + ["mark_as_published"]
+
+    def was_published_recently(self, obj):
+        import datetime as dt
+        from django.utils import timezone
+        if not obj.pub_date:
+            return False
+        return obj.pub_date >= timezone.now() - dt.timedelta(days=1)
+    was_published_recently.boolean = True
+    was_published_recently.short_description = "Published recently?"
+
+    def mark_as_published(self, request, queryset):
+        from django.utils import timezone
+        count = queryset.update(pub_date=timezone.now())
+        self.message_user(request, f"{count} questions marked as published.", messages.SUCCESS)
+    mark_as_published.short_description = "Mark selected questions as published"
+
+
+class ChoiceAdmin(DynamoDBAdmin):
+    list_display = ["choice_text", "question_id", "votes", "vote_percentage"]
+    list_filter = ["votes"]
+    search_fields = ["choice_text"]
+    readonly_fields = ["vote_percentage"]
+    list_per_page = 30
+    actions = DynamoDBAdmin.actions + ["reset_votes"]
+
+    def vote_percentage(self, obj):
+        if not obj.votes:
+            return "0%"
+        total_votes = max(obj.votes, 1)
+        percentage = (obj.votes / total_votes) * 100
+        return f"{percentage:.1f}%"
+    vote_percentage.short_description = "Vote %"
+
+    def reset_votes(self, request, queryset):
+        count = queryset.update(votes=0)
+        self.message_user(request, f"Reset votes for {count} choices.", messages.SUCCESS)
+    reset_votes.short_description = "Reset vote counts"
 
 
 @override_settings(

@@ -4,8 +4,8 @@ This tutorial will guide you through setting up Django with DynamoDB and creatin
 
 ## Prerequisites
 
-- Python 3.8 or higher
-- AWS account (for production) or DynamoDB Local (for development)
+- Python 3.11 or higher
+- AWS account (for production) or LocalStack / DynamoDB Local (for development)
 - Basic Django knowledge
 
 ## Step 1: Installation
@@ -13,15 +13,15 @@ This tutorial will guide you through setting up Django with DynamoDB and creatin
 ### Clone and Set Up the Project
 
 ```bash
-git clone https://github.com/your-org/django-dynamo-admin.git
-cd django-dynamo-admin
+git clone https://github.com/jpwhite3/django-dynamodb-backend.git
+cd django-dynamodb-backend
 
 # Create virtual environment
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Install the package with dev dependencies
+pip install -e ".[dev]"
 ```
 
 ### Install DynamoDB Local (Development)
@@ -46,14 +46,18 @@ docker run -p 8000:8000 amazon/dynamodb-local -jar DynamoDBLocal.jar -sharedDb -
 ### Update settings.py
 
 ```python
-# django_dynamo_admin/settings.py
+# settings.py
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django_dynamo_admin.database',
+        'ENGINE': 'django_dynamodb_backend.db',
         'NAME': 'tutorial_db',
-        'REGION': 'us-east-1',
-        'LOCAL_ENDPOINT': 'http://localhost:8000',  # Only for DynamoDB Local
+        'OPTIONS': {
+            'region_name': 'us-east-1',
+            'endpoint_url': 'http://localhost:4566',  # LocalStack for dev
+            'aws_access_key_id': 'test',
+            'aws_secret_access_key': 'test',
+        },
     }
 }
 
@@ -64,7 +68,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'dynamodb_adapter',
+    'django_dynamodb_backend',
     'myapp',  # Your application
 ]
 ```

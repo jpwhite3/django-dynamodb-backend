@@ -567,6 +567,60 @@ Using Pay-per-request billing mode keeps costs minimal for low-traffic apps:
 
 ---
 
+## FAQ & Gotchas
+
+### What does `migrate` do?
+
+Django's built-in `migrate` command does nothing for DynamoDB tables. Use the
+DynamoDB-specific management commands instead:
+
+```bash
+python manage.py dynamodb_create_session_table
+python manage.py dynamodb_create_user_table
+python manage.py dynamodb_migrate        # app-specific tables
+```
+
+If you're running in **Hybrid Mode** (DynamoDB + SQLite/PostgreSQL), you may
+still need `migrate` for the relational side (e.g. `contenttypes`).
+
+### Do I need `django.contrib.contenttypes`?
+
+Yes — Django admin requires it. The backend provides a no-op database engine
+so `migrate contenttypes` works without a relational database. In pure-DynamoDB
+mode, the contenttypes table is created in an in-memory SQLite store.
+
+### What about admin log entries (`LogEntry`)?
+
+Django's `LogEntry` model expects a relational database. In DynamoDB-only mode
+admin log entries are silently skipped. You'll want to rely on CloudWatch or
+Python `logging` for audit trails in production.
+
+### Will third-party apps work?
+
+It depends. Any app that:
+
+- Uses `models.Model` with ForeignKey / ManyToManyField may not work.
+- Relies on SQL `raw()`, `extra()`, or database-level constraints will not work.
+- Uses the standard `User` model will need to be pointed at `DynamoUser` via
+  `AUTH_USER_MODEL`.
+
+Apps that only read `request.user` or use `django.contrib.auth` permission
+checks should work without changes.
+
+### How do I handle M2M relationships?
+
+DynamoDB has no native join support. Instead of `ManyToManyField`, store
+related IDs in a `JSONField(default=list)` and manage the relationship in
+application code. See the Migration Tutorial for examples.
+
+### Is there a performance penalty for `order_by()`?
+
+Sorting is performed in-memory after fetching results. For small result sets
+this is fine. For large datasets, consider using a DynamoDB sort key or a GSI
+whose sort key matches your ordering.
+
+---
+
 ## Related Documentation
 
 | Document | When to read |

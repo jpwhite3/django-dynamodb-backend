@@ -3,14 +3,21 @@ DynamoDB User Model for Django Authentication.
 
 Provides a User model stored entirely in DynamoDB, compatible with Django's
 authentication system and admin interface.
+
+Design principle: inherit from Django's ``AbstractBaseUser`` so that password
+hashing, session-auth-hash, ``is_anonymous`` / ``is_authenticated``, and other
+auth plumbing is maintained upstream.  We do *not* use ``PermissionsMixin``
+because it relies on M2M fields (Group / Permission) that require a relational
+DB.  Instead we keep a lightweight, DynamoDB-friendly text-field permission
+scheme.
 """
 
-import hashlib
 import logging
 import uuid
 
 from django.conf import settings
-from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import AnonymousUser  # noqa: F401 – re-export
 from django.db import models
 
 from ...models import DynamoDBModel
@@ -21,25 +28,29 @@ logger = logging.getLogger(__name__)
 DYNAMODB_USER_TABLE_NAME = getattr(settings, "DYNAMODB_USER_TABLE_NAME", "django_users")
 
 
-class DynamoUser(DynamoDBModel):
+class DynamoUser(AbstractBaseUser, DynamoDBModel):
     """
     DynamoDB-backed User model compatible with Django's auth system.
 
-    This model implements the necessary interface for Django authentication
-    while storing all data in DynamoDB. It supports:
-    - Username/email-based authentication
-    - Password hashing using Django's password hashers
-    - Permissions stored as string sets
-    - Staff/superuser flags for admin access
+    Inherits from ``AbstractBaseUser`` which provides:
+    - ``password`` field, ``set_password()``, ``check_password()``
+    - ``set_unusable_password()``, ``has_usable_password()``
+    - ``get_session_auth_hash()``
+    - ``is_anonymous``, ``is_authenticated`` properties
+    - ``get_username()``, ``natural_key()``, ``clean()``
+    - ``last_login`` field
+    - ``REQUIRED_FIELDS`` handling
+
+    Permissions are stored as comma-separated text fields (not M2M) because
+    DynamoDB does not support relational joins.
     """
 
     # Primary key - using UUIDField for unique identification
     id = models.CharField(primary_key=True, max_length=36)
 
-    # Core authentication fields
+    # Core authentication fields (password & last_login inherited from AbstractBaseUser)
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(max_length=254, blank=True)
-    password = models.CharField(max_length=128)
 
     # Personal info
     first_name = models.CharField(max_length=150, blank=True)
@@ -50,15 +61,14 @@ class DynamoUser(DynamoDBModel):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
 
-    # Timestamps
+    # Timestamps (last_login inherited from AbstractBaseUser)
     date_joined = models.DateTimeField(auto_now_add=True)
-    last_login = models.DateTimeField(null=True, blank=True)
 
-    # Permissions stored as comma-separated strings
+    # Permissions stored as comma-separated strings (DynamoDB-friendly, no M2M)
     # Format: "app_label:model:codename,app_label:model:codename,..."
     user_permissions = models.TextField(blank=True, default="")
 
-    # Groups stored as comma-separated strings
+    # Groups stored as comma-separated strings (DynamoDB-friendly, no M2M)
     groups = models.TextField(blank=True, default="")
 
     # Custom manager will be set from managers.py
@@ -91,78 +101,67 @@ class DynamoUser(DynamoDBModel):
         return self.username
 
     # ========================================
-    # Password Management
+    # Password Management – thin overrides to sync _field_values
+    # All hashing / verification logic is in AbstractBaseUser.
     # ========================================
 
     def set_password(self, raw_password):
-        """Hash and set the password."""
-        self.password = make_password(raw_password)
+        """Hash and set the password, syncing to DynamoDB field store."""
+        super().set_password(raw_password)
         self._field_values["password"] = self.password
-
-    def check_password(self, raw_password):
-        """Check if the provided password matches."""
-
-        def setter(raw_password):
-            self.set_password(raw_password)
-            self.save(update_fields=["password"])
-
-        return check_password(raw_password, self.password, setter)
 
     def set_unusable_password(self):
-        """Set a value that will never be a valid password hash."""
-        self.password = make_password(None)
+        """Set an unusable password, syncing to DynamoDB field store."""
+        super().set_unusable_password()
         self._field_values["password"] = self.password
 
-    def has_usable_password(self):
-        """Check if the user has a usable password."""
-        return self.password is not None and not self.password.startswith("!")
+    # check_password, has_usable_password, get_session_auth_hash,
+    # is_anonymous, is_authenticated, get_username, natural_key
+    # are all inherited from AbstractBaseUser.
 
     # ========================================
-    # Permissions
+    # Personal info
+    # ========================================
+
+    def get_full_name(self):
+        """Return the full name."""
+        full_name = f"{self.first_name} {self.last_name}".strip()
+        return full_name or self.username
+
+    def get_short_name(self):
+        """Return the short name (first name)."""
+        return self.first_name or self.username
+
+    # ========================================
+    # Permissions (DynamoDB text-field scheme, not PermissionsMixin M2M)
     # ========================================
 
     def get_all_permissions(self, obj=None):
         """Return all permissions the user has."""
         if self.is_superuser:
-            # Superusers have all permissions
             return {"*"}
 
         perms = set()
-
-        # Add user's direct permissions
         if self.user_permissions:
             perms.update(
                 p.strip() for p in self.user_permissions.split(",") if p.strip()
             )
-
-        # Add permissions from groups
-        # (Would need group model implementation for full support)
-
         return perms
 
     def has_perm(self, perm, obj=None):
         """Check if user has a specific permission."""
         if not self.is_active:
             return False
-
         if self.is_superuser:
             return True
 
-        # Check direct permissions
         all_perms = self.get_all_permissions(obj)
-        if "*" in all_perms:
-            return True
-
-        # Check exact permission
-        if perm in all_perms:
+        if "*" in all_perms or perm in all_perms:
             return True
 
         # Check app-level wildcard (e.g., "polls:*")
         app_label = perm.split(":")[0] if ":" in perm else perm.split(".")[0]
-        if f"{app_label}:*" in all_perms:
-            return True
-
-        return False
+        return f"{app_label}:*" in all_perms
 
     def has_perms(self, perm_list, obj=None):
         """Check if user has all specified permissions."""
@@ -172,22 +171,17 @@ class DynamoUser(DynamoDBModel):
         """Check if user has any permission in the given app."""
         if not self.is_active:
             return False
-
         if self.is_superuser:
             return True
 
         all_perms = self.get_all_permissions()
-
-        # Check for wildcard
         if "*" in all_perms or f"{app_label}:*" in all_perms:
             return True
 
-        # Check for any permission in this app
-        for perm in all_perms:
-            if perm.startswith(f"{app_label}:") or perm.startswith(f"{app_label}."):
-                return True
-
-        return False
+        return any(
+            p.startswith(f"{app_label}:") or p.startswith(f"{app_label}.")
+            for p in all_perms
+        )
 
     def add_permission(self, perm):
         """Add a permission to the user."""
@@ -209,7 +203,7 @@ class DynamoUser(DynamoDBModel):
         self._field_values["user_permissions"] = ""
 
     # ========================================
-    # Groups (simplified implementation)
+    # Groups (simplified DynamoDB-friendly implementation)
     # ========================================
 
     def get_group_names(self):
@@ -233,105 +227,6 @@ class DynamoUser(DynamoDBModel):
             group_list.remove(group_name)
             self.groups = ",".join(sorted(group_list))
             self._field_values["groups"] = self.groups
-
-    # ========================================
-    # Django Auth Interface
-    # ========================================
-
-    @property
-    def is_anonymous(self):
-        """Always return False for authenticated users."""
-        return False
-
-    @property
-    def is_authenticated(self):
-        """Always return True for authenticated users."""
-        return True
-
-    def get_username(self):
-        """Return the username."""
-        return self.username
-
-    def get_full_name(self):
-        """Return the full name."""
-        full_name = f"{self.first_name} {self.last_name}".strip()
-        return full_name or self.username
-
-    def get_short_name(self):
-        """Return the short name (first name)."""
-        return self.first_name or self.username
-
-    def natural_key(self):
-        """Return the natural key for serialization."""
-        return (self.username,)
-
-    # ========================================
-    # Session support
-    # ========================================
-
-    def get_session_auth_hash(self):
-        """Return HMAC of the password field for session auth."""
-        key_salt = "django_dynamodb_backend.contrib.auth_dynamo.models.DynamoUser"
-        return hashlib.sha256(f"{key_salt}{self.password}".encode()).hexdigest()
-
-
-class AnonymousUser:
-    """
-    AnonymousUser for unauthenticated requests.
-
-    Mimics Django's AnonymousUser for compatibility.
-    """
-
-    id = None
-    pk = None
-    username = ""
-    is_staff = False
-    is_active = False
-    is_superuser = False
-
-    def __str__(self):
-        return "AnonymousUser"
-
-    def __eq__(self, other):
-        return isinstance(other, self.__class__)
-
-    def __hash__(self):
-        return 1
-
-    @property
-    def is_anonymous(self):
-        return True
-
-    @property
-    def is_authenticated(self):
-        return False
-
-    def save(self):
-        raise NotImplementedError("Cannot save AnonymousUser")
-
-    def delete(self):
-        raise NotImplementedError("Cannot delete AnonymousUser")
-
-    def set_password(self, raw_password):
-        raise NotImplementedError("Cannot set password for AnonymousUser")
-
-    def check_password(self, raw_password):
-        raise NotImplementedError("Cannot check password for AnonymousUser")
-
-    def get_all_permissions(self, obj=None):
-        return set()
-
-    def has_perm(self, perm, obj=None):
-        return False
-
-    def has_perms(self, perm_list, obj=None):
-        return False
-
-    def has_module_perms(self, app_label):
-        return False
-
-    def get_username(self):
-        return ""
 
 
 def create_user_table():

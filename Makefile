@@ -45,7 +45,6 @@ demo:
 	@echo ""
 	@echo "Starting demo environment with:"
 	@echo "  • LocalStack (DynamoDB)"
-	@echo "  • Redis (caching)"
 	@echo "  • Django development server"
 	@echo "  • Sample data (blog posts, products, orders)"
 	@echo ""
@@ -78,7 +77,7 @@ local-dev:
 
 stop:
 	@echo "🔌 Stopping local development environment..."
-	docker-compose -f docker-compose.yml down
+	docker compose -f docker-compose.yml down
 
 clean:
 	@echo "🧹 Cleaning Docker Environment..."
@@ -95,13 +94,12 @@ shell:
 # Testing & Code Quality Commands
 test:
 	@echo "🧪 Running Test Suite..."
-	docker compose -f docker-compose.yml build test
-	docker compose -f docker-compose.yml run --rm test pipenv run python -m pytest -v
+	python -m pytest tests/ -v
 
 test-local:
 	@echo "🧪 Running Test Suite on host machine..."
-	docker compose up -d localstack redis
-	PYTHONPATH=src pipenv run python run_tests.py $(TEST_PATH)
+	docker compose up -d localstack
+	PYTHONPATH=src python -m pytest tests/ $(TEST_PATH)
 	docker compose down
 
 lint:
@@ -115,7 +113,7 @@ format:
 # Setup Commands
 install:
 	@echo "📦 Installing Development Dependencies..."
-	pip install -r requirements/dev.txt
+	pip install -e ".[dev]"
 
 build:
 	@echo "🔨 Building Docker Images..."

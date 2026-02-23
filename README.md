@@ -44,8 +44,8 @@ flowchart LR
 
 - Python 3.11+
 - Django 5.2+
-- Docker (for local development)
 - boto3, pynamodb
+- Docker (optional — for the demo; not needed for development)
 
 ## Quick Start
 
@@ -61,7 +61,7 @@ make demo
 
 This starts:
 - **LocalStack** (local DynamoDB emulator)
-- **Django Admin** at http://localhost:8000/admin/
+- **Django Admin** at http://localhost:8001/admin/
 - **Sample data** (blog posts, products, orders)
 
 **Login:** `admin` / `admin123`
@@ -76,6 +76,22 @@ make demo-reset  # Reset and restart
 make demo-logs   # View logs
 ```
 
+### 🖥️ Quick Start Without Docker
+
+If you prefer to run locally without Docker, install [LocalStack CLI](https://docs.localstack.cloud/getting-started/installation/) (or use a real AWS account) and run:
+
+```bash
+git clone https://github.com/jpwhite3/django-dynamodb-backend.git
+cd django-dynamodb-backend
+pip install -e ".[dev]"
+
+# Start LocalStack in the background (or point to real AWS)
+localstack start -d
+
+# Run the test suite
+python -m pytest tests/
+```
+
 ---
 
 ## Installation
@@ -87,9 +103,6 @@ cd django-dynamodb-backend
 
 # Install with pip
 pip install -e .
-
-# Or with pipenv
-pipenv install
 ```
 
 ---
@@ -155,6 +168,9 @@ python manage.py dynamodb_create_session_table
 
 # Create users table (with GSIs) and admin user
 python manage.py dynamodb_create_user_table --create-admin
+
+# Or create a superuser interactively (like Django's createsuperuser)
+python manage.py dynamodb_createsuperuser
 
 # Create your app's tables
 python manage.py dynamodb_migrate
@@ -300,15 +316,15 @@ django-dynamodb-backend/
 # Setup
 git clone https://github.com/jpwhite3/django-dynamodb-backend.git
 cd django-dynamodb-backend
-pipenv install --dev
+pip install -e ".[dev]"
 
 # Lint
-pipenv run black .
-pipenv run isort .
-pipenv run flake8 .
+black .
+isort .
+flake8 .
 
 # Test
-pipenv run pytest tests/
+python -m pytest tests/
 ```
 
 ## Contributing

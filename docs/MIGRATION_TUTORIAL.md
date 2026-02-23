@@ -331,32 +331,29 @@ class Article(models.Model):
 
 ```python
 # models.py (after)
+from django.db import models
 from django_dynamodb_backend.models import DynamoDBModel
-from django_dynamodb_backend.fields import (
-    CharField, TextField, BooleanField, 
-    IntegerField, DateTimeField, SetField
-)
 
 class Article(DynamoDBModel):
     # Primary key (required - DynamoDB needs explicit PK)
-    id = CharField(max_length=36, primary_key=True)
+    id = models.CharField(max_length=36, primary_key=True)
     
-    # Same fields, different imports
-    title = CharField(max_length=200)
-    content = TextField()
+    # Same Django field types
+    title = models.CharField(max_length=200)
+    content = models.TextField()
     
     # ForeignKey becomes a string reference
-    author_id = CharField(max_length=36)  # Store user ID
-    category_id = CharField(max_length=36, null=True, blank=True)
+    author_id = models.CharField(max_length=36)  # Store user ID
+    category_id = models.CharField(max_length=36, null=True, blank=True)
     
-    # ManyToMany becomes a Set
-    tags = SetField(base_field=CharField(max_length=50), default=set)
+    # ManyToMany becomes a JSONField or comma-separated TextField
+    tags = models.JSONField(default=list)  # Store tag IDs as a list
     
     # These work the same
-    published = BooleanField(default=False)
-    view_count = IntegerField(default=0)
-    created_at = DateTimeField(auto_now_add=True)
-    updated_at = DateTimeField(auto_now=True)
+    published = models.BooleanField(default=False)
+    view_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         table_name = 'articles'  # Explicit table name
@@ -388,26 +385,27 @@ class Article(DynamoDBModel):
 | `models.Model` | `DynamoDBModel` | Base class |
 | Auto `id` field | Explicit `id = CharField(primary_key=True)` | Must define PK |
 | `ForeignKey` | `CharField` storing ID | No joins in DynamoDB |
-| `ManyToManyField` | `SetField` or separate table | Store IDs in a set |
+| `ManyToManyField` | `JSONField` (list) or separate table | Store IDs in a list |
 | `ordering` in Meta | Manual ordering or GSI | Use GSI for sort |
 | `db_table` | `table_name` | Meta option name |
 
 ### Field Type Mapping
 
+`DynamoDBModel` uses standard Django field types — no special imports needed:
+
 ```python
-# Django ORM → DynamoDB Backend
-from django_dynamodb_backend.fields import (
-    CharField,       # models.CharField
-    TextField,       # models.TextField  
-    IntegerField,    # models.IntegerField
-    FloatField,      # models.FloatField
-    BooleanField,    # models.BooleanField
-    DateTimeField,   # models.DateTimeField
-    DateField,       # models.DateField
-    SetField,        # Replaces ManyToManyField
-    ListField,       # For ordered lists
-    MapField,        # For nested JSON/dict
-)
+# Use standard django.db.models fields
+from django.db import models
+
+models.CharField      # → DynamoDB String (S)
+models.TextField      # → DynamoDB String (S)
+models.IntegerField   # → DynamoDB Number (N)
+models.FloatField     # → DynamoDB Number (N)
+models.BooleanField   # → DynamoDB Boolean (BOOL)
+models.DateTimeField  # → DynamoDB String (S) / UTCDateTime
+models.DateField      # → DynamoDB String (S) ISO format
+models.JSONField      # → DynamoDB Map (M) or List (L)
+models.UUIDField      # → DynamoDB String (S)
 ```
 
 ### Handling Relationships
@@ -459,7 +457,7 @@ class Comment(DynamoDBModel):
         return Article.objects.get(pk=self.article_id)
 ```
 
-#### Many-to-Many (Using SetField)
+#### Many-to-Many (Using JSONField)
 
 ```python
 # Before
@@ -468,8 +466,8 @@ class Article(models.Model):
 
 # After  
 class Article(DynamoDBModel):
-    # Store tag IDs in a set
-    tag_ids = SetField(base_field=CharField(max_length=36), default=set)
+    # Store tag IDs in a list (DynamoDB List type)
+    tag_ids = models.JSONField(default=list)
     
     # Helper methods
     def get_tags(self):

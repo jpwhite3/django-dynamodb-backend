@@ -517,11 +517,6 @@ class DynamoDBQuerySet(QuerySet):
 
         return clone
 
-    def distinct(self, *field_names):
-        """Return distinct values (limited support in DynamoDB)."""
-        logger.warning("DynamoDB doesn't support SQL-like DISTINCT operations.")
-        return self._clone()
-
     def only(self, *fields):
         """Defer all fields except the specified ones."""
         return self.values(*fields)
@@ -532,19 +527,10 @@ class DynamoDBQuerySet(QuerySet):
         clone._deferred_fields = set(fields)
         return clone
 
-    def select_related(self, *fields):
-        """DynamoDB doesn't support joins, log warning."""
-        logger.warning(
-            "DynamoDB doesn't support SQL joins. select_related has no effect."
-        )
-        return self._clone()
-
-    def prefetch_related(self, *lookups):
-        """DynamoDB doesn't support joins, log warning."""
-        logger.warning(
-            "DynamoDB doesn't support SQL joins. prefetch_related has no effect."
-        )
-        return self._clone()
+    # select_related() and prefetch_related() are intentionally NOT overridden.
+    # Django's QuerySet base already handles them as no-ops when the backend
+    # doesn't support joins.  Avoiding the override reduces the surface area
+    # that can break when Django changes QuerySet method signatures.
 
     def aggregate(self, **kwargs):
         """Aggregation support for DynamoDB.
@@ -1425,17 +1411,26 @@ class DynamoDBManager(models.Manager):
         """Convert Django model instance to PynamoDB-compatible data."""
         pynamodb_data = {}
 
-        # Get model fields
+        # Get model fields — use field.name (PynamoDB attribute names match
+        # Django field names, not the DB column aliases).
         for field in self.model._meta.fields:
             value = getattr(django_instance, field.name, None)
             if value is not None:
                 # Convert value to DynamoDB-compatible format
-                pynamodb_data[field.column] = self._preprocess_field_value(field, value)
+                pynamodb_data[field.name] = self._preprocess_field_value(field, value)
 
         return pynamodb_data
 
     def _preprocess_field_value(self, field, value):
-        """Preprocess field value for DynamoDB storage."""
+        """Preprocess field value for PynamoDB model instantiation.
+
+        Values are passed to PynamoDB attribute constructors, so they must
+        match what each PynamoDB attribute type expects:
+        - UTCDateTimeAttribute → datetime object (not ISO string)
+        - NumberAttribute      → Decimal
+        - BooleanAttribute     → bool
+        - UnicodeAttribute     → str
+        """
         from django.db import models
 
         if value is None:
@@ -1454,9 +1449,11 @@ class DynamoDBManager(models.Manager):
             return Decimal(str(value))
         elif isinstance(field, (models.FloatField, models.DecimalField)):
             return Decimal(str(value))
-        elif isinstance(
-            field, (models.DateTimeField, models.DateField, models.TimeField)
-        ):
+        elif isinstance(field, models.DateTimeField):
+            # PynamoDB UTCDateTimeAttribute expects a datetime object.
+            return value
+        elif isinstance(field, (models.DateField, models.TimeField)):
+            # Stored as UnicodeAttribute — convert to ISO string.
             if hasattr(value, "isoformat"):
                 return value.isoformat()
             return str(value)

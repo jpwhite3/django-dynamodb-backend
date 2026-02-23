@@ -208,9 +208,7 @@ class GSIOptimizer:
             first_order_field = ordering[0].lstrip("-")
             if first_order_field == gsi.range_key:
                 score += 2.0  # Good ordering match
-                # Check if ordering direction matches GSI sort order
-                ordering[0].startswith("-")
-                # In DynamoDB, you can specify ScanIndexForward=False for descending
+                # DynamoDB supports ScanIndexForward=False for descending
                 score += 0.5
             elif first_order_field == gsi.hash_key:
                 score += 1.0  # Partial ordering match
@@ -475,11 +473,9 @@ class GSIMonitoringMixin:
 
 
 def optimize_queryset_with_gsi(queryset, model_class):
-    """Optimize a queryset using GSI analysis."""
-    GSIOptimizer(model_class)
+    """Optimize a queryset using GSI analysis.
 
-    # Extract query information
-
-    # This would need more sophisticated query introspection
-    # For now, return the queryset as-is
+    Currently a pass-through; GSI selection is handled at query time
+    by ``GSIOptimizer.analyze_query_for_gsi``.
+    """
     return queryset

@@ -37,7 +37,7 @@ class DynamoUserManager(DynamoDBManager):
         """Normalize email address to lowercase."""
         if email:
             return email.lower().strip()
-        return ""
+        return None
 
     def _normalize_username(self, username):
         """Normalize username (case-insensitive by default)."""
@@ -218,18 +218,24 @@ class DynamoUserManager(DynamoDBManager):
 
         from .models import DynamoUser
 
-        user = DynamoUser(
-            username=self._normalize_username(username),
-            email=self._normalize_email(email) if email else "",
+        kwargs = {
+            "username": self._normalize_username(username),
             **extra_fields,
-        )
+        }
+        # Only include email if provided — DynamoDB rejects empty strings
+        # on GSI key attributes.
+        normalized_email = self._normalize_email(email)
+        if normalized_email:
+            kwargs["email"] = normalized_email
+
+        user = DynamoUser(**kwargs)
 
         if password:
             user.set_password(password)
         else:
             user.set_unusable_password()
 
-        user._field_values["date_joined"] = datetime.now(timezone.utc).isoformat()
+        user._field_values["date_joined"] = datetime.now(timezone.utc)
         user.save()
         return user
 

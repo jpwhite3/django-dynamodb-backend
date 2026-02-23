@@ -127,25 +127,18 @@ from django_dynamodb_backend.models import '''
             model_name = options["create_table"]
             content += f"{model_name}\n"
         else:
-            # Import all models from the app
-            try:
-                app_config = apps.get_app_config(app_label)
-                models_module = f"{app_config.name}.models"
-                exec(f"import {models_module}")
-                content += "# Import your models here\n"
-            except Exception:
-                content += "# Import your models here\n"
+            content += "# Import your models here\n"
 
         content += f"""
 
 class Migration(DynamoDBMigration):
     \"\"\"Migration: {migration_name}\"\"\"
-    
+
     dependencies = [
         # Add dependencies here, e.g.:
         # ('app_label', 'previous_migration_name'),
     ]
-    
+
     operations = [
 """
 
@@ -185,7 +178,7 @@ def migrate_data_forward(item):
 def migrate_data_reverse(item):
     \"\"\"Reverse data migration function.\"\"\"
     # Reverse the changes made in migrate_data_forward
-    # item.save() 
+    # item.save()
     pass
 """
 

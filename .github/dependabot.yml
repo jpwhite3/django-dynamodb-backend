@@ -3,7 +3,7 @@
 
 version: 2
 updates:
-  # Python dependencies (pip/pipenv)
+  # Python dependencies (pip)
   - package-ecosystem: "pip"
     directory: "/"
     schedule:

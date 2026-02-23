@@ -7,8 +7,7 @@ We welcome contributions! This document provides guidelines for contributing to 
 ### Prerequisites
 
 - Python 3.11+
-- Django 5.2+ or Django 6.2+
-- pipenv
+- Django 5.2+ or Django 6.0+
 - Docker and Docker Compose (for LocalStack DynamoDB)
 
 ### Development Setup
@@ -23,7 +22,7 @@ cd django-dynamodb-backend
 2. **Install Dependencies**
 
 ```bash
-pipenv install --dev
+pip install -e ".[dev]"
 ```
 
 3. **Start LocalStack (DynamoDB)**
@@ -35,7 +34,7 @@ docker compose up -d localstack
 4. **Run Tests**
 
 ```bash
-pipenv run pytest tests/
+python -m pytest tests/
 ```
 
 5. **Run the Demo** (optional)
@@ -53,15 +52,15 @@ We use automated formatting tools:
 
 ```bash
 # Format code
-pipenv run black .
-pipenv run isort .
+black .
+isort .
 
 # Check formatting
-pipenv run black --check .
-pipenv run isort --check-only .
+black --check .
+isort --check-only .
 
 # Lint
-pipenv run flake8 .
+flake8 .
 ```
 
 ### Making Changes
@@ -75,8 +74,8 @@ git checkout -b feature/your-feature
 
 3. Format your code:
 ```bash
-pipenv run black .
-pipenv run isort .
+black .
+isort .
 ```
 
 4. Commit with a descriptive message:
@@ -107,16 +106,16 @@ We follow conventional commits:
 
 ```bash
 # Run all tests
-pipenv run pytest tests/
+python -m pytest tests/
 
 # Run unit tests only
-pipenv run pytest tests/unit/
+python -m pytest tests/unit/
 
 # Run with coverage
-pipenv run pytest --cov=src/django_dynamodb_backend
+python -m pytest --cov=src/django_dynamodb_backend
 
 # Run specific test file
-pipenv run pytest tests/unit/test_models.py
+python -m pytest tests/unit/test_fields.py
 ```
 
 ### Test Structure

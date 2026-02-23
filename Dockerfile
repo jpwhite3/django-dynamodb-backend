@@ -31,10 +31,7 @@ FROM base as development
 USER root
 
 COPY . /app/
-
-COPY Pipfile Pipfile.lock /app/
-RUN pip install pipenv
-RUN pipenv install --system --dev
+RUN pip install -e ".[dev]"
 
 RUN chown -R django:django /app
 
@@ -50,33 +47,16 @@ CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 FROM base as test
 
-
-
 USER root
 
-
-
-
-
-
-
-RUN apt-get update && apt-get install -y htop sudo
 COPY . /app/
-COPY Pipfile Pipfile.lock /app/
-RUN pip install pipenv
-RUN pipenv install --system --dev
-
-
+RUN pip install -e ".[dev]"
 
 RUN chown -R django:django /app
 
-
-
 USER root
 
-
-
-CMD ["pytest"]
+CMD ["python", "-m", "pytest", "tests/"]
 
 
 
@@ -87,10 +67,7 @@ FROM base as production
 USER root
 
 COPY . /app/
-
-COPY Pipfile Pipfile.lock /app/
-RUN pip install pipenv
-RUN pipenv install --system
+RUN pip install .
 
 RUN chown -R django:django /app
 
@@ -100,4 +77,4 @@ RUN python manage.py collectstatic --noinput || true
 
 EXPOSE 8000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "django_dynamo_admin.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "django_dynamodb_backend.wsgi:application"]

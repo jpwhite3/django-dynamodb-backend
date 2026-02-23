@@ -8,6 +8,8 @@ import unittest
 from datetime import datetime
 from unittest.mock import MagicMock
 
+import pytest
+
 from django.test import TestCase
 
 from django_dynamodb_backend.managers import (
@@ -393,7 +395,7 @@ class TestMemoryUsage(TestCase):
         """Test memory usage during model creation."""
         import os
 
-        import psutil
+        psutil = pytest.importorskip("psutil")
 
         process = psutil.Process(os.getpid())
         initial_memory = process.memory_info().rss
@@ -420,7 +422,7 @@ class TestMemoryUsage(TestCase):
         """Test memory usage of QuerySet operations."""
         import os
 
-        import psutil
+        psutil = pytest.importorskip("psutil")
 
         process = psutil.Process(os.getpid())
         initial_memory = process.memory_info().rss

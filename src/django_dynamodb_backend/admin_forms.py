@@ -8,6 +8,7 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
 from django import forms
+from django.db import models
 from django.contrib.admin.widgets import (
     AdminDateWidget,
     AdminSplitDateTime,
@@ -200,7 +201,7 @@ class DynamoDBModelForm(DynamoDBFormMixin, forms.ModelForm):
 
             if value is not None:
                 # Convert Decimal for numeric fields
-                if isinstance(field, (forms.IntegerField, forms.DecimalField)):
+                if isinstance(field, (models.IntegerField, models.DecimalField)):
                     if not isinstance(value, Decimal):
                         try:
                             setattr(instance, field.name, Decimal(str(value)))
@@ -208,7 +209,7 @@ class DynamoDBModelForm(DynamoDBFormMixin, forms.ModelForm):
                             pass
 
                 # Ensure datetime fields are timezone-aware
-                elif isinstance(field, forms.DateTimeField):
+                elif isinstance(field, models.DateTimeField):
                     if isinstance(value, datetime) and value.tzinfo is None:
                         from django.utils import timezone
 
@@ -348,7 +349,7 @@ class UUIDWidget(DynamoDBWidget, TextInput):
 
         # Add UUID generation button
         button_html = f"""
-        <button type="button" class="btn btn-outline-secondary btn-sm ml-1" 
+        <button type="button" class="btn btn-outline-secondary btn-sm ml-1"
                 onclick="document.getElementById('id_{name}').value = generateUUID()">
             Generate UUID
         </button>

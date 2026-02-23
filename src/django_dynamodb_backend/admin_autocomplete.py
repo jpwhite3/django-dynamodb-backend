@@ -38,9 +38,6 @@ class DynamoDBAutocompleteView(View):
         # Get search parameters
         term = request.GET.get("term", "")
         page = request.GET.get("page", 1)
-        request.GET.get("app_label", "")
-        request.GET.get("model_name", "")
-        request.GET.get("field_name", "")
 
         # Validate parameters
         if not term or len(term) < 2:

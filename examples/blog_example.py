@@ -79,6 +79,7 @@ class BlogPost(DynamoDBModel):
     featured_image_url = models.URLField(blank=True)
 
     class Meta:
+        app_label = "django_dynamodb_backend"
         ordering = ["-created_at"]
 
     def __str__(self):
@@ -127,6 +128,7 @@ class Comment(DynamoDBModel):
     parent_comment_id = models.IntegerField(null=True, blank=True)
 
     class Meta:
+        app_label = "django_dynamodb_backend"
         ordering = ["created_at"]
 
     def __str__(self):
@@ -158,6 +160,9 @@ class Category(DynamoDBModel):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        app_label = "django_dynamodb_backend"
+
     def __str__(self):
         return self.name
 
@@ -173,6 +178,9 @@ class Tag(DynamoDBModel):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        app_label = "django_dynamodb_backend"
+
     def __str__(self):
         return self.name
 
@@ -187,6 +195,7 @@ class PostTag(DynamoDBModel):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        app_label = "django_dynamodb_backend"
         unique_together = ["post_slug", "tag_name"]
 
     def __str__(self):

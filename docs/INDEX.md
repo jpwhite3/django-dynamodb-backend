@@ -132,6 +132,7 @@ flowchart LR
 |---------|---------|------|
 | `dynamodb_create_session_table` | Create sessions table | [API Reference](API_REFERENCE.md#management-commands) |
 | `dynamodb_create_user_table` | Create users table | [API Reference](API_REFERENCE.md#management-commands) |
+| `dynamodb_createsuperuser` | Create a superuser interactively | [API Reference](API_REFERENCE.md#management-commands) |
 | `dynamodb_migrate` | Apply migrations | [API Reference](API_REFERENCE.md#management-commands) |
 | `dynamodb_makemigrations` | Create migrations | [API Reference](API_REFERENCE.md#management-commands) |
 | `dynamodb_showmigrations` | Show migration status | [API Reference](API_REFERENCE.md#management-commands) |
@@ -152,7 +153,8 @@ flowchart LR
 ## ❓ FAQ
 
 ### "I just want to try this out"
-Run `make demo` and visit http://localhost:8001/admin/ (admin/admin123)
+Run `make demo` and visit http://localhost:8001/admin/ (admin/admin123).  
+If running `local-dev` instead, the URL is http://localhost:8000/admin/.
 
 ### "I have an existing Django project"
 Start with the [Migration Tutorial](MIGRATION_TUTORIAL.md) — it walks you through everything.

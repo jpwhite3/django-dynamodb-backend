@@ -38,7 +38,7 @@ services:
       context: .
       target: development
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       - DEBUG=True
       - DJANGO_SETTINGS_MODULE=examples.demo_project.settings

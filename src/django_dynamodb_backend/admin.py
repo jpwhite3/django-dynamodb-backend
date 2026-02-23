@@ -17,7 +17,6 @@ from .admin_filters import (
 )
 from .admin_permissions import SecureDynamoDBAdmin
 from .gsi_optimizer import GSIMonitoringMixin
-from .models import Choice, MyModel, Question
 from .pagination import DynamoDBPaginationMixin
 
 logger = logging.getLogger(__name__)
@@ -120,44 +119,13 @@ class DynamoDBDateHierarchyMixin:
 class DynamoDBChangeList(ChangeList):
     """Custom ChangeList for DynamoDB models to handle pagination efficiently."""
 
-    def __init__(
-        self,
-        request,
-        model,
-        list_display,
-        list_display_links,
-        list_filter,
-        date_hierarchy,
-        search_fields,
-        list_select_related,
-        list_per_page,
-        list_max_show_all,
-        list_editable,
-        model_admin,
-        sortable_by,
-        search_help_text=None,
-    ):
-        super().__init__(
-            request,
-            model,
-            list_display,
-            list_display_links,
-            list_filter,
-            date_hierarchy,
-            search_fields,
-            list_select_related,
-            list_per_page,
-            list_max_show_all,
-            list_editable,
-            model_admin,
-            sortable_by,
-            search_help_text,
-        )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
         # Store pagination info for DynamoDB
         self._last_evaluated_key = None
         self._total_count = None
-        self._date_hierarchy_field = date_hierarchy
+        self._date_hierarchy_field = self.date_hierarchy
 
     def get_queryset(self, request):
         """Get queryset with DynamoDB optimizations."""
@@ -338,21 +306,44 @@ class DynamoDBAdminLoggingMixin:
         self.log_admin_action(request, obj, "delete", f"Deleted: {object_repr}")
 
 
-class DynamoDBAdmin(
+# ---------------------------------------------------------------------------
+# Consolidated mixin groups – keeps MRO shallow and easier to maintain
+# when Django's ModelAdmin evolves.
+# ---------------------------------------------------------------------------
+
+
+class DynamoDBCoreMixin(
+    DynamoDBPaginationMixin,
+    DynamoDBDateHierarchyMixin,
     DynamoDBFilterMixin,
-    SecureDynamoDBAdmin,
+    GSIMonitoringMixin,
+):
+    """Core DynamoDB query, pagination, filtering and GSI behaviour."""
+
+
+class DynamoDBActionsMixin(
     DynamoDBActionMixin,
     DynamoDBAutocompleteMixin,
-    DynamoDBPaginationMixin,
-    GSIMonitoringMixin,
-    DynamoDBDateHierarchyMixin,
+):
+    """Admin actions and autocomplete."""
+
+
+class DynamoDBSecurityMixin(
+    SecureDynamoDBAdmin,
     DynamoDBAdminLoggingMixin,
+):
+    """Permissions, audit, and rate-limiting."""
+
+
+class DynamoDBAdmin(
+    DynamoDBCoreMixin,
+    DynamoDBActionsMixin,
+    DynamoDBSecurityMixin,
     ModelAdmin,
 ):
     """Enhanced admin class for DynamoDB models with full Django Admin compatibility."""
 
     # Use custom components
-    changelist_view_class = DynamoDBChangeList
     form = DynamoDBAdminForm
 
     # Default configuration optimized for DynamoDB
@@ -604,94 +595,6 @@ class DynamoDBAdmin(
         return super().has_view_permission(request, obj)
 
 
-# Note: Model registration should be done in your app's admin.py, not here.
-# Example:
-# from django_dynamodb_backend.admin import DynamoDBAdmin
-# from myapp.models import MyModel
-# admin.site.register(MyModel, DynamoDBAdmin)
-
-
-class QuestionAdmin(DynamoDBAdmin):
-    """Enhanced admin configuration for Question model."""
-
-    list_display = ["question_text", "pub_date", "was_published_recently"]
-    list_filter = ["pub_date"]
-    search_fields = ["question_text"]
-    date_hierarchy = "pub_date"  # Enable date hierarchy navigation
-    # Note: DynamoDB has limited ordering support
-    # ordering = ["pub_date"]
-    empty_value_display = "-empty-"
-    fieldsets = [
-        (None, {"fields": ["question_text"]}),
-        ("Date information", {"fields": ["pub_date"]}),
-    ]
-
-    # DynamoDB-specific configuration
-    list_per_page = 20  # Smaller page size for complex data
-    actions = DynamoDBAdmin.actions + ["mark_as_published"]
-
-    def was_published_recently(self, obj):
-        """Display method for recent publication status."""
-        import datetime
-
-        from django.utils import timezone
-
-        if not obj.pub_date:
-            return False
-
-        return obj.pub_date >= timezone.now() - datetime.timedelta(days=1)
-
-    was_published_recently.boolean = True
-    was_published_recently.short_description = "Published recently?"
-
-    def mark_as_published(self, request, queryset):
-        """Custom action to mark questions as recently published."""
-        from django.utils import timezone
-
-        count = queryset.update(pub_date=timezone.now())
-        self.message_user(
-            request, f"{count} questions marked as published.", messages.SUCCESS
-        )
-
-    mark_as_published.short_description = "Mark selected questions as published"
-
-
-class ChoiceAdmin(DynamoDBAdmin):
-    """Enhanced admin configuration for Choice model."""
-
-    list_display = ["choice_text", "question_id", "votes", "vote_percentage"]
-    list_filter = ["votes"]
-    search_fields = ["choice_text"]
-    readonly_fields = ["vote_percentage"]
-
-    # DynamoDB-specific configuration
-    list_per_page = 30
-    actions = DynamoDBAdmin.actions + ["reset_votes"]
-
-    def vote_percentage(self, obj):
-        """Calculate and display vote percentage."""
-        if not obj.votes:
-            return "0%"
-
-        # This is a simplified calculation
-        # In a real app, you'd want to calculate against total votes
-        total_votes = max(obj.votes, 1)  # Avoid division by zero
-        percentage = (obj.votes / total_votes) * 100
-        return f"{percentage:.1f}%"
-
-    vote_percentage.short_description = "Vote %"
-
-    def reset_votes(self, request, queryset):
-        """Custom action to reset vote counts."""
-        count = queryset.update(votes=0)
-        self.message_user(
-            request, f"Reset votes for {count} choices.", messages.SUCCESS
-        )
-
-    reset_votes.short_description = "Reset vote counts"
-
-
-# Enhanced admin site configuration
 class DynamoDBAdminSite(admin.AdminSite):
     """Custom admin site for DynamoDB with enhanced features."""
 
@@ -703,7 +606,6 @@ class DynamoDBAdminSite(admin.AdminSite):
         """Enhanced admin index with DynamoDB-specific information."""
         extra_context = extra_context or {}
 
-        # Add DynamoDB-specific context
         extra_context.update(
             {
                 "dynamodb_info": {
@@ -721,14 +623,6 @@ class DynamoDBAdminSite(admin.AdminSite):
         return super().index(request, extra_context)
 
 
-# Create custom admin site instance
+# Pre-built admin site instance for convenience
 dynamodb_admin_site = DynamoDBAdminSite(name="dynamodb_admin")
 
-# Register models with both default and custom admin sites
-admin.site.register(Question, QuestionAdmin)
-admin.site.register(Choice, ChoiceAdmin)
-
-# Also register with custom site
-dynamodb_admin_site.register(Question, QuestionAdmin)
-dynamodb_admin_site.register(Choice, ChoiceAdmin)
-dynamodb_admin_site.register(MyModel, DynamoDBAdmin)

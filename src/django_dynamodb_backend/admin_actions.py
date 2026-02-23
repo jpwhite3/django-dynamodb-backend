@@ -342,11 +342,12 @@ class DynamoDBActionMixin:
             total_size += item_size
 
             status = "OK"
-            if item_size > 350 * 1024:  # 350KB warning threshold
+            if item_size > 400 * 1024:  # 400KB DynamoDB limit
+                status = "ERROR"
+                large_items.append((obj, item_size))
+            elif item_size > 350 * 1024:  # 350KB warning threshold
                 status = "WARNING"
                 large_items.append((obj, item_size))
-            elif item_size > 400 * 1024:  # 400KB DynamoDB limit
-                status = "ERROR"
 
             results.append(
                 {

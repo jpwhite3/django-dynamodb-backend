@@ -587,7 +587,7 @@ create_user_table()
 Enhanced admin class for DynamoDB models with full Django Admin compatibility.
 
 ```python
-class DynamoDBAdmin(DynamoDBFilterMixin, SecureDynamoDBAdmin, ModelAdmin)
+class DynamoDBAdmin(DynamoDBCoreMixin, DynamoDBActionsMixin, DynamoDBSecurityMixin, ModelAdmin)
 ```
 
 #### Attributes
@@ -1128,12 +1128,14 @@ Raised when a get() query returns multiple objects.
 ```python
 DATABASES = {
     'default': {
-        'ENGINE': 'django_dynamo_admin.database',
-        'NAME': 'database_name',
-        'REGION': 'us-east-1',
-        'LOCAL_ENDPOINT': 'http://localhost:8000',  # Optional
-        'ACCESS_KEY_ID': 'your-key',  # Optional
-        'SECRET_ACCESS_KEY': 'your-secret',  # Optional
+        'ENGINE': 'django_dynamodb_backend.db',
+        'NAME': 'my_app',
+        'OPTIONS': {
+            'region_name': 'us-east-1',
+            'endpoint_url': 'http://localhost:4566',  # Optional, for LocalStack
+            'aws_access_key_id': 'test',  # Optional, uses IAM role if omitted
+            'aws_secret_access_key': 'test',  # Optional
+        }
     }
 }
 ```

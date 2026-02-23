@@ -38,6 +38,9 @@ class CompleteIntegrationTestModel(DynamoDBModel):
         default="books",
     )
 
+    class Meta:
+        app_label = "django_dynamodb_backend"
+
 
 class CompleteSystemIntegrationTest(TestCase):
     """Test the complete system integration across all phases."""

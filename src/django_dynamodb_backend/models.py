@@ -81,10 +81,8 @@ class DynamoDBModelMeta(type(models.Model)):
             if field.primary_key:
                 pynamodb_attrs[field.name] = pynamodb_attr_class(hash_key=True)
             else:
-                attr_kwargs = {}
-                if getattr(field, "null", False):
-                    attr_kwargs["null"] = True
-                pynamodb_attrs[field.name] = pynamodb_attr_class(**attr_kwargs)
+                # DynamoDB is schemaless — all non-PK attributes are optional.
+                pynamodb_attrs[field.name] = pynamodb_attr_class(null=True)
 
         # Ensure we have a primary key
         if not any(
@@ -252,6 +250,12 @@ class DynamoDBModel(models.Model, metaclass=DynamoDBModelMeta):
             return f"{self.__class__.__name__}(pk={pk_value})"
 
 
+# ---------------------------------------------------------------------------
+# Example / test models – used by the test suite and demo project.
+# Your own models should live in your app, not here.
+# ---------------------------------------------------------------------------
+
+
 class MyModel(DynamoDBModel):
     """Example DynamoDB model."""
 
@@ -287,7 +291,7 @@ class Choice(DynamoDBModel):
     """Choice model using DynamoDB backend."""
 
     id = models.AutoField(primary_key=True)
-    question_id = models.CharField(max_length=50)  # Reference to Question ID as string
+    question_id = models.CharField(max_length=50)
     choice_text = models.CharField(max_length=200)
     votes = models.IntegerField(default=0)
 
