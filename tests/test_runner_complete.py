@@ -263,8 +263,6 @@ def run_quick_validation():
 
     # Test 2: Database backend import
     try:
-        pass
-
         print("✅ Database backend import successful")
     except Exception as e:
         print(f"❌ Database backend import failed: {e}")
@@ -272,8 +270,6 @@ def run_quick_validation():
 
     # Test 3: Model import
     try:
-        pass
-
         print("✅ DynamoDBModel import successful")
     except Exception as e:
         print(f"❌ DynamoDBModel import failed: {e}")
@@ -281,8 +277,6 @@ def run_quick_validation():
 
     # Test 4: Admin import
     try:
-        pass
-
         print("✅ DynamoDBAdmin import successful")
     except Exception as e:
         print(f"❌ DynamoDBAdmin import failed: {e}")
@@ -290,8 +284,6 @@ def run_quick_validation():
 
     # Test 5: Migration system import
     try:
-        pass
-
         print("✅ Migration system import successful")
     except Exception as e:
         print(f"❌ Migration system import failed: {e}")

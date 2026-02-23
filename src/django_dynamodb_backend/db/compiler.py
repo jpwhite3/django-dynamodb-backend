@@ -196,12 +196,9 @@ class SQLCompiler(compiler.SQLCompiler):
                 # Return results
                 for result in queryset:
                     yield self._convert_result_to_row(result)
-            else:
-                return iter([])
 
         except Exception as e:
             logger.error(f"Error in results_iter: {e}")
-            return iter([])
 
     def _apply_query_filters(self, queryset):
         """

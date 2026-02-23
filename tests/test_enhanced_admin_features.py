@@ -18,9 +18,7 @@ from django.test import RequestFactory, TestCase
 from django.test.utils import override_settings
 
 from django_dynamodb_backend.admin import DynamoDBAdmin
-from django_dynamodb_backend.admin_actions import DynamoDBActionMixin
 from django_dynamodb_backend.admin_autocomplete import (
-    DynamoDBAutocompleteMixin,
     DynamoDBAutocompleteWidget,
 )
 from django_dynamodb_backend.admin_inlines import (
@@ -89,9 +87,6 @@ class TestDynamoDBAdminInlines(TestCase):
         # Mock PynamoDB model
         mock_pynamodb_model = MagicMock()
         mock_get_model.return_value = mock_pynamodb_model
-
-        # Create parent object
-        parent_obj = MyModel(name="Test Parent")
 
         # DynamoDBInlineFormSet extracts parent_obj from instance kwarg
         # and stores it before calling super().__init__

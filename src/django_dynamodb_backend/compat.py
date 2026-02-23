@@ -9,6 +9,23 @@ import django
 
 DJANGO_VERSION = django.VERSION
 
+__all__ = [
+    "DJANGO_VERSION",
+    "IS_POPUP_VAR",
+    "ChangeList",
+    "admin_helpers",
+    "sensitive_post_parameters_m",
+    "DjangoUserCreationForm",
+    "DjangoUserChangeForm",
+    "DjangoAdminPasswordChangeForm",
+    "DjangoAuthenticationForm",
+    "DjangoUserAdmin",
+    "DjangoBaseBackend",
+    "AbstractBaseUser",
+    "PermissionsMixin",
+    "DjangoAnonymousUser",
+]
+
 # ---------------------------------------------------------------------------
 # Admin internals
 # ---------------------------------------------------------------------------

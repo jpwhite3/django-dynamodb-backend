@@ -219,10 +219,11 @@ class RunPython(DynamoDBOperation):
         """Execute the custom code."""
         try:
             logger.info("Executing custom Python code in migration")
-            if callable(self.code_func):
-                self.code_func()
-            else:
-                exec(self.code_func)
+            if not callable(self.code_func):
+                raise TypeError(
+                    f"code_func must be callable, got {type(self.code_func).__name__}"
+                )
+            self.code_func()
             logger.info("Successfully executed custom Python code")
         except Exception as e:
             logger.error(f"Error executing custom Python code: {e}")
@@ -233,10 +234,12 @@ class RunPython(DynamoDBOperation):
         try:
             if self.reverse_code_func:
                 logger.info("Executing reverse Python code in migration")
-                if callable(self.reverse_code_func):
-                    self.reverse_code_func()
-                else:
-                    exec(self.reverse_code_func)
+                if not callable(self.reverse_code_func):
+                    raise TypeError(
+                        f"reverse_code_func must be callable, got "
+                        f"{type(self.reverse_code_func).__name__}"
+                    )
+                self.reverse_code_func()
                 logger.info("Successfully executed reverse Python code")
         except Exception as e:
             logger.error(f"Error executing reverse Python code: {e}")

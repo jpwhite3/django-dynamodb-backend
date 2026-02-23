@@ -148,8 +148,10 @@ class DynamoDBModelForm(DynamoDBFormMixin, forms.ModelForm):
                             {field_name: _("Value must be valid JSON.")}
                         )
 
+            except ValidationError:
+                raise
             except Exception as e:
-                logger.warning(f"Error validating field {field_name}: {e}")
+                logger.warning("Error validating field %s: %s", field_name, e)
 
     def _validate_size_limits(self, cleaned_data):
         """Validate DynamoDB item size limits."""
@@ -206,7 +208,10 @@ class DynamoDBModelForm(DynamoDBFormMixin, forms.ModelForm):
                         try:
                             setattr(instance, field.name, Decimal(str(value)))
                         except (InvalidOperation, ValueError):
-                            pass
+                            logger.debug(
+                                "Could not convert %s to Decimal",
+                                field.name,
+                            )
 
                 # Ensure datetime fields are timezone-aware
                 elif isinstance(field, models.DateTimeField):

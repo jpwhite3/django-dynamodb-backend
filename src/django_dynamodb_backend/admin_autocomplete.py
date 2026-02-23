@@ -289,7 +289,7 @@ class DynamoDBAutocompleteMultipleWidget(AutocompleteSelectMultiple):
                             }
                         )
                     except self.model.DoesNotExist:
-                        pass
+                        logger.debug("Object with pk %s not found", val)
 
         return formatted_values
 

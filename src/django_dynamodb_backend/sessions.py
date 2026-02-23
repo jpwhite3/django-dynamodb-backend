@@ -192,7 +192,8 @@ class SessionStore(SessionBase):
     def save(self, must_create=False):
         """Save session data to DynamoDB."""
         if self.session_key is None:
-            return self.create()
+            self.create()
+            return
 
         session_key = self._get_or_create_session_key()
         session_data = self._encode_data(self._get_session(no_load=must_create))

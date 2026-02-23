@@ -156,8 +156,7 @@ class DynamoDBTestRunner:
 
     def run_tests(self, test_labels=None, extra_tests=None, **kwargs):
         """Run the test suite."""
-        if test_labels is None:
-            test_labels = ["tests"]
+        _ = test_labels  # API parameter, tests are discovered below
 
         print("=" * 80)
         print("DJANGO DYNAMODB INTEGRATION TEST SUITE")

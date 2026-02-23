@@ -19,22 +19,22 @@ logger = logging.getLogger(__name__)
 class DynamoDBModelMeta(type(models.Model)):
     """Metaclass for DynamoDB models that creates PynamoDB model classes."""
 
-    def __new__(mcs, name, bases, namespace, **kwargs):
+    def __new__(cls, name, bases, namespace, **kwargs):
         # Create the Django model first
-        cls = super().__new__(mcs, name, bases, namespace, **kwargs)
+        new_cls = super().__new__(cls, name, bases, namespace, **kwargs)
 
         # Skip processing for abstract models and the base DynamoDBModel
-        if getattr(cls._meta, "abstract", False) or name == "DynamoDBModel":
-            return cls
+        if getattr(new_cls._meta, "abstract", False) or name == "DynamoDBModel":
+            return new_cls
 
         # Mark for later PynamoDB model creation (deferred to avoid circular dependencies)
-        cls._pynamodb_model_class = None
-        cls._needs_pynamodb_model = True
+        new_cls._pynamodb_model_class = None
+        new_cls._needs_pynamodb_model = True
 
-        return cls
+        return new_cls
 
     @classmethod
-    def _create_pynamodb_model(mcs, django_model):
+    def _create_pynamodb_model(cls, django_model):
         """Create a PynamoDB model class from Django model."""
         django_model._meta.db_table
 
@@ -100,7 +100,7 @@ class DynamoDBModelMeta(type(models.Model)):
         return pynamodb_model
 
     @classmethod
-    def _setup_field_descriptors(mcs, django_model):
+    def _setup_field_descriptors(cls, django_model):
         """Set up field descriptors for DynamoDB integration."""
         for field in django_model._meta.get_fields():
             if field.name.startswith("_"):

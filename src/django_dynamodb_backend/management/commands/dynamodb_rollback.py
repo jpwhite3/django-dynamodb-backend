@@ -37,7 +37,8 @@ class Command(BaseCommand):
 
         # Show rollback plan
         if options["plan"]:
-            return self._show_plan(executor, app_label, migration_name)
+            self._show_plan(executor, app_label, migration_name)
+            return
 
         # Perform rollback
         try:

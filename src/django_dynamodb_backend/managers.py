@@ -382,7 +382,7 @@ class DynamoDBQuerySet(QuerySet):
                         obj = self.get(**{field_name: pk_value})
                         result[pk_value] = obj
                     except ObjectDoesNotExist:
-                        pass
+                        logger.debug("Object with pk %s not found in in_bulk", pk_value)
 
         return result
 
@@ -447,8 +447,6 @@ class DynamoDBQuerySet(QuerySet):
                         obj.save()
                         created_objects.append(obj)
                     except Exception as save_error:
-                        if not ignore_conflicts:
-                            raise save_error
                         logger.warning(f"Skipped object due to conflict: {save_error}")
 
         return created_objects
@@ -572,7 +570,10 @@ class DynamoDBQuerySet(QuerySet):
                                 try:
                                     values.append(float(val))
                                 except (ValueError, TypeError):
-                                    pass
+                                    logger.debug(
+                                        "Non-numeric value skipped for aggregation on %s",
+                                        field_name,
+                                    )
                         field_values_cache[field_name] = values
 
                     values = field_values_cache[field_name]
@@ -871,11 +872,10 @@ class DynamoDBQuerySet(QuerySet):
                 scan_kwargs["last_evaluated_key"] = self._last_evaluated_key
 
             # Add limit (adjust for offset if needed)
-            actual_limit = self._limit_count
             if self._offset_count and self._limit_count:
-                actual_limit = self._limit_count + self._offset_count
-            elif actual_limit:
-                scan_kwargs["limit"] = actual_limit
+                scan_kwargs["limit"] = self._limit_count + self._offset_count
+            elif self._limit_count:
+                scan_kwargs["limit"] = self._limit_count
 
             # Perform scan
             if count_only:
@@ -933,7 +933,7 @@ class DynamoDBQuerySet(QuerySet):
 
         except Exception as e:
             logger.error(f"Error executing DynamoDB scan: {e}")
-            return []
+            return
 
     def _execute_query(self, count_only=False):
         """Execute optimized Query operation on DynamoDB."""
@@ -944,7 +944,8 @@ class DynamoDBQuerySet(QuerySet):
                 logger.warning(
                     "Query operation requested but no query filters available"
                 )
-                return self._execute_scan(count_only)
+                yield from self._execute_scan(count_only)
+                return
 
             # Build query parameters
             query_kwargs = {}
@@ -994,7 +995,8 @@ class DynamoDBQuerySet(QuerySet):
 
             if key_condition is None:
                 logger.warning("No valid key condition for Query operation")
-                return self._execute_scan(count_only)
+                yield from self._execute_scan(count_only)
+                return
 
             query_kwargs["key_condition"] = key_condition
 
@@ -1055,7 +1057,7 @@ class DynamoDBQuerySet(QuerySet):
         except Exception as e:
             logger.error(f"Error executing DynamoDB query: {e}")
             # Fallback to scan
-            return self._execute_scan(count_only)
+            yield from self._execute_scan(count_only)
 
     def _convert_pynamodb_to_django(self, pynamodb_instance):
         """Convert a PynamoDB model instance to Django model instance."""
@@ -1375,8 +1377,6 @@ class DynamoDBManager(models.Manager):
                         obj.save(using=self._db)
                         created_objects.append(obj)
                     except Exception as save_error:
-                        if not ignore_conflicts:
-                            raise save_error
                         logger.warning(f"Skipped object due to conflict: {save_error}")
 
         return created_objects

@@ -46,11 +46,13 @@ class Command(BaseCommand):
 
         # Show migration status
         if options["list"]:
-            return self._show_migrations(executor)
+            self._show_migrations(executor)
+            return
 
         # Show migration plan
         if options["plan"]:
-            return self._show_plan(executor, options)
+            self._show_plan(executor, options)
+            return
 
         # Apply migrations
         try:

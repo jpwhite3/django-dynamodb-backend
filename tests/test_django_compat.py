@@ -7,9 +7,7 @@ production.  They intentionally avoid hitting DynamoDB (no moto/localstack).
 """
 
 import inspect
-from unittest.mock import MagicMock, patch
 
-import django
 import pytest
 from django.contrib.admin import ModelAdmin
 from django.contrib.admin.views.main import ChangeList

@@ -343,7 +343,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
                 self.connection.client.describe_limits()
                 return True
         except Exception:
-            pass
+            return False
         return False
 
     @property

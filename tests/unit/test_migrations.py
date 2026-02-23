@@ -172,13 +172,12 @@ class TestRunPython(TestCase):
 
         mock_func.assert_called_once()
 
-    def test_execute_string_code(self):
-        """Test execute with string code."""
-        # This is a simple test - in real usage, exec would run the code
+    def test_execute_string_code_raises(self):
+        """Test execute with string code raises TypeError (exec is disallowed)."""
         operation = RunPython("x = 1 + 1")
 
-        # Should not raise exception
-        operation.execute()
+        with self.assertRaises(TypeError):
+            operation.execute()
 
     def test_reverse_with_function(self):
         """Test reverse with reverse function."""
