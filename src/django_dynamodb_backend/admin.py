@@ -625,4 +625,3 @@ class DynamoDBAdminSite(admin.AdminSite):
 
 # Pre-built admin site instance for convenience
 dynamodb_admin_site = DynamoDBAdminSite(name="dynamodb_admin")
-

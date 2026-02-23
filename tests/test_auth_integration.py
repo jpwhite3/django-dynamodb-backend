@@ -7,14 +7,13 @@ validating the real code paths that the contract-only compat tests don't cover.
 
 import boto3
 import pytest
-from moto import mock_aws
-
 from django.conf import settings
-
+from moto import mock_aws
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 def _create_users_table():
     """Create the django_users table in mocked DynamoDB."""
@@ -82,7 +81,9 @@ class TestDynamoUserManager:
     """Test DynamoUserManager against mocked DynamoDB."""
 
     def _get_manager(self):
-        from django_dynamodb_backend.contrib.auth_dynamo.managers import DynamoUserManager
+        from django_dynamodb_backend.contrib.auth_dynamo.managers import (
+            DynamoUserManager,
+        )
         from django_dynamodb_backend.contrib.auth_dynamo.models import DynamoUser
 
         mgr = DynamoUserManager()
@@ -157,8 +158,12 @@ class TestDynamoAuthBackend:
     """Test authenticate() and get_user() against mocked DynamoDB."""
 
     def _setup(self):
-        from django_dynamodb_backend.contrib.auth_dynamo.backends import DynamoAuthBackend
-        from django_dynamodb_backend.contrib.auth_dynamo.managers import DynamoUserManager
+        from django_dynamodb_backend.contrib.auth_dynamo.backends import (
+            DynamoAuthBackend,
+        )
+        from django_dynamodb_backend.contrib.auth_dynamo.managers import (
+            DynamoUserManager,
+        )
         from django_dynamodb_backend.contrib.auth_dynamo.models import DynamoUser
 
         mgr = DynamoUserManager()

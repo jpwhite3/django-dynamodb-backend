@@ -56,12 +56,8 @@ try:
         AdminPasswordChangeForm as DjangoAdminPasswordChangeForm,
     )
     from django.contrib.auth.forms import AuthenticationForm as DjangoAuthenticationForm
-    from django.contrib.auth.forms import (
-        UserChangeForm as DjangoUserChangeForm,
-    )
-    from django.contrib.auth.forms import (
-        UserCreationForm as DjangoUserCreationForm,
-    )
+    from django.contrib.auth.forms import UserChangeForm as DjangoUserChangeForm
+    from django.contrib.auth.forms import UserCreationForm as DjangoUserCreationForm
 except ImportError:  # pragma: no cover
     DjangoUserCreationForm = None
     DjangoUserChangeForm = None
@@ -91,8 +87,9 @@ except ImportError:  # pragma: no cover
 # ---------------------------------------------------------------------------
 
 try:
-    from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+    from django.contrib.auth.models import AbstractBaseUser
     from django.contrib.auth.models import AnonymousUser as DjangoAnonymousUser
+    from django.contrib.auth.models import PermissionsMixin
 except ImportError:  # pragma: no cover
     AbstractBaseUser = None
     PermissionsMixin = None

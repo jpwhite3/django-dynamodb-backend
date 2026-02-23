@@ -18,7 +18,6 @@ from ...compat import (
 )
 from .models import DynamoUser
 
-
 # ---------------------------------------------------------------------------
 # User creation
 # ---------------------------------------------------------------------------
@@ -96,12 +95,8 @@ class DynamoUserChangeForm(DjangoUserChangeForm):
             )
 
         if "groups" in self.fields:
-            self.fields["groups"].widget = forms.Textarea(
-                attrs={"rows": 2, "cols": 60}
-            )
-            self.fields["groups"].help_text = _(
-                "Comma-separated list of group names"
-            )
+            self.fields["groups"].widget = forms.Textarea(attrs={"rows": 2, "cols": 60})
+            self.fields["groups"].help_text = _("Comma-separated list of group names")
 
 
 # ---------------------------------------------------------------------------

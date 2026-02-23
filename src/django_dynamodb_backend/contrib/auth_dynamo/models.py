@@ -16,8 +16,8 @@ import logging
 import uuid
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import AnonymousUser  # noqa: F401 – re-export
+from django.contrib.auth.models import AbstractBaseUser
 from django.db import models
 
 from ...models import DynamoDBModel

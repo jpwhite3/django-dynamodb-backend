@@ -8,13 +8,13 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
 from django import forms
-from django.db import models
 from django.contrib.admin.widgets import (
     AdminDateWidget,
     AdminSplitDateTime,
     AdminTimeWidget,
 )
 from django.core.exceptions import ValidationError
+from django.db import models
 from django.forms.widgets import CheckboxInput, Select, Textarea, TextInput
 from django.utils.translation import gettext_lazy as _
 

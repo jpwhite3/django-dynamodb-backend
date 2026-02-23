@@ -9,10 +9,8 @@ import time
 
 import boto3
 import pytest
-from moto import mock_aws
-
 from django.conf import settings
-
+from moto import mock_aws
 
 # ---------------------------------------------------------------------------
 # Fixtures

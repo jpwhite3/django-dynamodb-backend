@@ -9,7 +9,6 @@ from datetime import datetime
 from unittest.mock import MagicMock
 
 import pytest
-
 from django.test import TestCase
 
 from django_dynamodb_backend.managers import (

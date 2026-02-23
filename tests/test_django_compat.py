@@ -16,7 +16,6 @@ from django.contrib.admin.views.main import ChangeList
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth.models import AbstractBaseUser
 
-
 # ── ChangeList *args/**kwargs forwarding ──────────────────────────────────
 
 
@@ -29,12 +28,12 @@ class TestChangeListInit:
 
         sig = inspect.signature(DynamoDBChangeList.__init__)
         param_kinds = {p.kind for p in sig.parameters.values() if p.name != "self"}
-        assert inspect.Parameter.VAR_POSITIONAL in param_kinds, (
-            "DynamoDBChangeList.__init__ must accept *args"
-        )
-        assert inspect.Parameter.VAR_KEYWORD in param_kinds, (
-            "DynamoDBChangeList.__init__ must accept **kwargs"
-        )
+        assert (
+            inspect.Parameter.VAR_POSITIONAL in param_kinds
+        ), "DynamoDBChangeList.__init__ must accept *args"
+        assert (
+            inspect.Parameter.VAR_KEYWORD in param_kinds
+        ), "DynamoDBChangeList.__init__ must accept **kwargs"
 
     def test_subclasses_changelist(self):
         from django_dynamodb_backend.admin import DynamoDBChangeList
@@ -91,7 +90,8 @@ class TestDynamoUserAuthContract:
         assert hasattr(self.User, prop)
 
     @pytest.mark.parametrize(
-        "field", ["password", "last_login", "username", "email", "is_active", "is_staff"]
+        "field",
+        ["password", "last_login", "username", "email", "is_active", "is_staff"],
     )
     def test_has_expected_field(self, field):
         field_names = [f.name for f in self.User._meta.get_fields()]

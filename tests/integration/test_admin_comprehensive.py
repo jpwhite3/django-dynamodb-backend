@@ -6,12 +6,11 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch
 
+from django.contrib import messages
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import User
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.test import RequestFactory, TestCase
-
-from django.contrib import messages
 
 from django_dynamodb_backend.admin import (
     DynamoDBAdmin,
@@ -43,17 +42,24 @@ class QuestionAdmin(DynamoDBAdmin):
 
     def was_published_recently(self, obj):
         import datetime as dt
+
         from django.utils import timezone
+
         if not obj.pub_date:
             return False
         return obj.pub_date >= timezone.now() - dt.timedelta(days=1)
+
     was_published_recently.boolean = True
     was_published_recently.short_description = "Published recently?"
 
     def mark_as_published(self, request, queryset):
         from django.utils import timezone
+
         count = queryset.update(pub_date=timezone.now())
-        self.message_user(request, f"{count} questions marked as published.", messages.SUCCESS)
+        self.message_user(
+            request, f"{count} questions marked as published.", messages.SUCCESS
+        )
+
     mark_as_published.short_description = "Mark selected questions as published"
 
 
@@ -71,11 +77,15 @@ class ChoiceAdmin(DynamoDBAdmin):
         total_votes = max(obj.votes, 1)
         percentage = (obj.votes / total_votes) * 100
         return f"{percentage:.1f}%"
+
     vote_percentage.short_description = "Vote %"
 
     def reset_votes(self, request, queryset):
         count = queryset.update(votes=0)
-        self.message_user(request, f"Reset votes for {count} choices.", messages.SUCCESS)
+        self.message_user(
+            request, f"Reset votes for {count} choices.", messages.SUCCESS
+        )
+
     reset_votes.short_description = "Reset vote counts"
 
 
