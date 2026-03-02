@@ -50,7 +50,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Download artifact
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
         name: dist
         path: dist/
@@ -71,7 +71,7 @@ jobs:
       id-token: write  # Required for trusted publishing
     steps:
     - name: Download artifact
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
         name: dist
         path: dist/
@@ -93,7 +93,7 @@ jobs:
       id-token: write  # Required for trusted publishing
     steps:
     - name: Download artifact
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
         name: dist
         path: dist/
@@ -113,7 +113,7 @@ jobs:
         fetch-depth: 0
 
     - name: Download artifact
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
         name: dist
         path: dist/
