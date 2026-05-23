@@ -6,7 +6,9 @@ Welcome! This index helps you find the right documentation for your needs.
 
 | What do you want to do? | Start here |
 |------------------------|------------|
-| **Try it out quickly** | Run `make demo` → [README Quick Start](../README.md#quick-start) |
+| **Install the package** | `pip install django-dynamodb-backend` → [README](../README.md) |
+| **Try it out quickly** | [Demo Guide](DEMO.md) (`make demo`) |
+| **Understand how it fits together** | [Architecture](ARCHITECTURE.md) |
 | **Migrate an existing Django project** | [Migration Tutorial](MIGRATION_TUTORIAL.md) |
 | **Start a new project with DynamoDB** | [Migration Tutorial → Step 3](MIGRATION_TUTORIAL.md#step-3-configure-settings) |
 | **Deploy to production/Lambda** | [Deployment Guide](DEPLOYMENT_GUIDE.md) |
@@ -64,9 +66,19 @@ flowchart LR
 ## 📖 Document Summaries
 
 ### [README.md](../README.md)
-**Purpose:** Project overview and quick start  
-**Read this to:** Understand what the project does, try the demo, see basic examples  
+**Purpose:** Project overview, installation, and minimal configuration  
+**Read this to:** Install the package, see basic configuration and code examples  
 **Time:** 5 minutes
+
+### [Architecture](ARCHITECTURE.md)
+**Purpose:** How the package's pieces fit together  
+**Read this to:** Understand the component layout and DynamoDB table layout at a glance  
+**Time:** 5 minutes
+
+### [Demo Guide](DEMO.md)
+**Purpose:** Run the bundled demo project locally  
+**Read this to:** Stand up a working example with `make demo` (or manually) and click around  
+**Time:** 5-10 minutes
 
 ### [Migration Tutorial](MIGRATION_TUTORIAL.md)
 **Purpose:** Step-by-step guide for migrating existing Django projects  
@@ -112,7 +124,7 @@ flowchart LR
 
 | Task | Document | Section |
 |------|----------|---------|
-| Run the demo | [README](../README.md) | Quick Start |
+| Run the demo | [Demo Guide](DEMO.md) | Option 1: Docker |
 | Configure settings.py | [Migration Tutorial](MIGRATION_TUTORIAL.md) | Step 3 |
 | Convert a model | [Migration Tutorial](MIGRATION_TUTORIAL.md) | Step 4 |
 | Convert admin class | [Migration Tutorial](MIGRATION_TUTORIAL.md) | Step 5 |
@@ -181,6 +193,8 @@ django-dynamodb-backend/
 │
 ├── docs/
 │   ├── INDEX.md                 # You are here
+│   ├── ARCHITECTURE.md          # How the pieces fit together
+│   ├── DEMO.md                  # Running the bundled demo locally
 │   ├── MIGRATION_TUTORIAL.md    # Step-by-step migration guide
 │   ├── DJANGO_COMPATIBILITY.md  # ORM feature support
 │   ├── API_REFERENCE.md         # Complete API docs
