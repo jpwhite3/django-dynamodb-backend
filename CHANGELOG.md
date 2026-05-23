@@ -5,7 +5,14 @@ All notable changes to Django DynamoDB Backend will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] (targeting 2.0.0)
+## [Unreleased]
+
+_No changes yet._
+
+## [1.0.0rc1] - 2026-05-23
+
+First release candidate published to PyPI under the new `django-dynamodb-backend`
+package name. Promote to `1.0.0` after smoke-testing the TestPyPI artifact.
 
 ### Added
 - **🚀 DynamoDB-Only Mode**: Run Django 100% on DynamoDB without any relational database

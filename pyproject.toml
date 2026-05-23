@@ -1,16 +1,20 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=77.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-dynamodb-backend"
-version = "1.0.0"
-description = "A comprehensive Django database backend for Amazon DynamoDB."
+version = "1.0.0rc1"
+description = "A Django database backend and admin integration for Amazon DynamoDB."
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 authors = [
-    {name = "Django DynamoDB Backend Contributors", email = "contributors@django-dynamodb-backend.org"}
+    {name = "JP White", email = "jpwhite3@gmail.com"},
+]
+maintainers = [
+    {name = "JP White", email = "jpwhite3@gmail.com"},
 ]
 keywords = [
     "django",
@@ -31,18 +35,20 @@ classifiers = [
     "Framework :: Django :: 5.2",
     "Framework :: Django :: 6.0",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Database",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: System :: Systems Administration",
+    "Typing :: Typed",
 ]
 dependencies = [
     "django>=5.2",
@@ -80,6 +86,7 @@ Documentation = "https://django-dynamodb-backend.readthedocs.io"
 Repository = "https://github.com/jpwhite3/django-dynamodb-backend"
 Issues = "https://github.com/jpwhite3/django-dynamodb-backend/issues"
 Discussions = "https://github.com/jpwhite3/django-dynamodb-backend/discussions"
+Changelog = "https://github.com/jpwhite3/django-dynamodb-backend/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]
