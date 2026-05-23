@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-dynamodb-backend"
-version = "1.0.0rc1"
+version = "1.0.0"
 description = "A Django database backend and admin integration for Amazon DynamoDB."
 readme = "README.md"
 license = "MIT"

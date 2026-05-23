@@ -9,7 +9,7 @@ __all__ = [
     "convert_f_expression",
 ]
 
-__version__ = "1.0.0rc1"
+__version__ = "1.0.0"
 
 
 def __getattr__(name):

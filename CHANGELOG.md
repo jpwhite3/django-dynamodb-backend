@@ -9,10 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _No changes yet._
 
+## [1.0.0] - 2026-05-23
+
+First stable release on PyPI. Functionally identical to `1.0.0rc1`; the only
+delta is a PyPI-focused README rewrite (no emoji, no mermaid, real
+`pip install` instructions) and the relocation of displaced sections into
+`docs/ARCHITECTURE.md` and `docs/DEMO.md`.
+
+### Changed
+- Rewrote `README.md` for PyPI: removed all emoji and the mermaid architecture
+  diagram (which PyPI's renderer does not execute), replaced the
+  `git clone ... pip install -e .` instructions with
+  `pip install django-dynamodb-backend`, dropped contributor-only sections,
+  and made every doc/CONTRIBUTING/LICENSE link an absolute GitHub URL so they
+  resolve from pypi.org.
+- Added a PyPI version badge to the README.
+
+### Added
+- `docs/ARCHITECTURE.md` — component diagram and repository layout previously
+  in the README.
+- `docs/DEMO.md` — `make demo` Docker walkthrough and the no-Docker local
+  setup previously in the README's Quick Start section.
+
 ## [1.0.0rc1] - 2026-05-23
 
 First release candidate published to PyPI under the new `django-dynamodb-backend`
-package name. Promote to `1.0.0` after smoke-testing the TestPyPI artifact.
+package name.
 
 ### Added
 - **🚀 DynamoDB-Only Mode**: Run Django 100% on DynamoDB without any relational database
