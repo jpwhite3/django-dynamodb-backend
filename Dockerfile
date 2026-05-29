@@ -1,6 +1,6 @@
 # Django DynamoDB Backend - Production Dockerfile
 
-FROM python:3.14.3-slim as base
+FROM python:3.14.5-slim as base
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
